@@ -4,62 +4,27 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'utfs.io',
-        // Optionally, you can specify a port and pathname prefix
-        // port: '',
-        // pathname: '/path/to/images/*',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'assets.aceternity.com',
-        
+        hostname: 'picsum.photos',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
-      
-      },
-      {
-        protocol: 'https',
-        hostname: "your-cdn.com",
-      
-      },
-      {
-        protocol: 'https',
-        hostname: "res.cloudinary.com",
-      
-      },
+        pathname: '/**',
+      }
     ],
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000']
+    }
+  }
+}
 
-  webpack(config) {
-    // Grab the existing rule that handles SVG imports
-    const fileLoaderRule = config.module.rules.find((rule) =>
-      rule.test?.test?.(".svg")
-    );
-
-    config.module.rules.push(
-      // Reapply the existing rule, but only for svg imports ending in ?url
-      {
-        ...fileLoaderRule,
-        test: /\.svg$/i,
-        resourceQuery: /url/, // *.svg?url
-      },
-      // Convert all other *.svg imports to React components
-      {
-        test: /\.svg$/i,
-        issuer: fileLoaderRule.issuer,
-        resourceQuery: { not: [...fileLoaderRule.resourceQuery.not, /url/] }, // exclude if *.svg?url
-        use: ["@svgr/webpack"],
-      }
-    );
-
-    // Modify the file loader rule to ignore *.svg, since we have it handled now.
-    fileLoaderRule.exclude = /\.svg$/i;
-
-    return config;
-  },
-};
-
-module.exports = nextConfig;
+module.exports = nextConfig
 

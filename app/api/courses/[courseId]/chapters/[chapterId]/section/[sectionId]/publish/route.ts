@@ -41,7 +41,7 @@ export async function PATCH(
           id: params.sectionId,
         }
       });
-      console.log(section)
+      //console.log(section)
 
     // Check for the presence of required fields in the chapter
     if (!section || !section.title || !section.videoUrl) {

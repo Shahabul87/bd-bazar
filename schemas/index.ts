@@ -83,14 +83,23 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
-  email: z.string().email({
-    message: "Email is required",
+  name: z.string().min(1, {
+    message: "Name is required",
+  }),
+  email: z.string().min(1, {
+    message: "Email or phone number is required",
+  }).refine((value) => {
+    // Check if it's a valid email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Check if it's a valid phone number (basic validation)
+    const phoneRegex = /^\+?[\d\s-]{10,}$/;
+    
+    return emailRegex.test(value) || phoneRegex.test(value);
+  }, {
+    message: "Please enter a valid email address or phone number",
   }),
   password: z.string().min(6, {
     message: "Minimum 6 characters required",
-  }),
-  name: z.string().min(1, {
-    message: "Name is required",
   }),
 });
 

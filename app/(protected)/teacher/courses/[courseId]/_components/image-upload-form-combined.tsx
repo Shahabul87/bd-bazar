@@ -10,7 +10,7 @@ import { Course } from "@prisma/client";
 import Image from "next/image";
 import { FileUpload } from "@/fileupload/file-upload";
 import { Button } from "@/components/ui/button";
-import FirstImageComponent from "./image-url";
+
 
 // Define the type for each uploaded file
 interface UploadedFile {

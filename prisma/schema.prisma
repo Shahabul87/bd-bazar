@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["fullTextSearch","fullTextIndex"]
+  previewFeatures = ["fullTextSearchPostgres"]
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -12,30 +12,15 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url  	    = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // uncomment next line if you use Prisma <5.10
+  // directUrl = env("DATABASE_URL_UNPOOLED")
 }
-
 
 enum UserRole {
   ADMIN
   USER
-  TEACHER
-  PARENTS
 }
 
-// model User {
-//   id            String    @id @default(cuid())
-//   name          String?
-//   email         String?   @unique
-//   emailVerified DateTime?
-//   image         String?
-//   password      String?
-//   role          UserRole @default(USER)
-//   accounts      Account[]
-//   courses       Course[]
-//   isTwoFactorEnabled Boolean @default(false)
-//   twoFactorConfirmation TwoFactorConfirmation?
-// }
 
 model User {
   id                    String                 @id @default(cuid())
@@ -47,13 +32,12 @@ model User {
   confirmPassword       String?
   role                  UserRole               @default(USER)
   accounts              Account[]
-  courses               Course[]
+  
+  products              Product[]
   isTwoFactorEnabled    Boolean                @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
 
   phone                 String?                // Optional field for phone number
-  profileLinks          ProfileLink[]          // One-to-many relation with ProfileLink
-
   posts                 Post[]                 // One-to-many relation with Post
   comments              Comment[]              // One-to-many relation with Comment
   reply                 Reply[]
@@ -61,194 +45,156 @@ model User {
   commentReactions      CommentReaction[]      // One-to-many relation with CommentReaction
   replyReactions        ReplyReaction[]        // One-to-many relation with ReplyReaction
 
-  // Relations to learning resources created by the user
-  videos                Video[]                @relation("UserVideos")
-  blogs                 Blog[]                 @relation("UserBlogs")
-  articles              Article[]              @relation("UserArticles")
-  notes                 Note[]                 @relation("UserNotes")
-
-  // Relations to favorite content
-  favoriteVideos        FavoriteVideo[]        // One-to-many relation with FavoriteVideo
-  favoriteAudios        FavoriteAudio[]        // One-to-many relation with FavoriteAudio
-  favoriteArticles      FavoriteArticle[]      // One-to-many relation with FavoriteArticle
-  favoriteBlogs         FavoriteBlog[]         // One-to-many relation with FavoriteBlog
-  favoriteImages        FavoriteImage[]        // One-to-many relation with FavoriteImage
+ 
+  reviews               Review[]
+  orders                Order[]
+  categoryRequests      CategoryRequest[]
 }
 
 
+// schema.prisma
+// schema.prisma
 
-
-model Course {
-  id                    String                 @id @default(uuid())
-  title                 String                 @db.Text
-  description           String?                @db.Text
-  imageUrl              String?                @db.Text
-  price                 Float?
-  isPublished           Boolean               @default(false)
+// Product Model
+model Product {
+  id            String      @id @default(cuid())
+  name          String
+  brand         String?     // Made optional since we have existing data
+  description   String?     @db.Text
+  price         Decimal     @db.Decimal(10, 2)
+  sku           String?     @unique
+  active        Boolean     @default(true)
+  featured      Boolean     @default(false)
+  stock         Int         @default(0)
+  status        String      @default("active") // Kept for existing data, default changed to "active"
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  specifications Json?      // Store name-value pairs for specifications
+  dimensions    Json?      // Store name-value pairs for dimensions
+  colors        Json?      // Store name-value pairs for colors
   
-  categoryId            String?
-  category              Category?              @relation(fields: [categoryId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+
+  categories    ProductCategory[]
+  images        ProductImage[]
+  reviews       Review[]
+
+  @@index([userId])
+}
+
+// Category Model with hierarchical structure
+model ProductCategory {
+  id            String      @id @default(cuid())
+  mainCategory  String
+  subCategory   String?
+  finalCategory String?
+  description   String?     @db.Text
+  slug          String      @unique
   
-  userId                String
-  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Products in this category
+  products      Product[]
 
-  chapters              Chapter[]
-  attachments           Attachment[]
-  purchases             Purchase[]
+  // Metadata
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-
-  @@index([categoryId])
+  @@unique([mainCategory, subCategory, finalCategory])
 }
 
-model Chapter {
-  id                    String                 @id @default(uuid())
-  title                 String
-  description           String?                @db.Text
-  learningOutcomes      String?                @db.Text
-  position              Int
-  isPublished           Boolean               @default(false)
-  isFree                Boolean               @default(false)
-
-  courseId              String
-  course                Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  userProgress          UserProgress[]
-  sections              Section[]
-
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-
-  @@index([courseId])
-}
-
-model Section {
-  id                    String                 @id @default(uuid())
-  title                 String
-  videoUrl              String?                @db.Text
-  position              Int
-  isPublished           Boolean               @default(false)
-  isFree                Boolean               @default(false)
-
-  chapterId             String
-  chapter               Chapter                @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-
-  userProgress          UserProgress[]
-  questions             Question[]
-
-  // Relations to various resources within this section
-  videos                Video[]                // One-to-many relation with Video
-  blogs                 Blog[]                 // One-to-many relation with Blog
-  articles              Article[]              // One-to-many relation with Article
-  notes                 Note[]                 // One-to-many relation with Note
-
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-
-  @@index([chapterId])
-} 
-
-model Video {
-  id             String    @id @default(uuid())
-  title          String
-  description    String?   @db.Text
-  url            String    @db.VarChar(255)
-  duration       Int?      // Duration in seconds
-  clarityRating  Int?      // Rating for concept clarity, e.g., 1-5 scale
-  position       Int       // Position/order within the section
-
-  sectionId      String?
-  section        Section?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  userId         String
-  user           User      @relation("UserVideos", fields: [userId], references: [id], onDelete: Cascade)
-
-  category     String?
+// Product Image Model
+model ProductImage {
+  id            String    @id @default(cuid())
+  url           String
+  publicId      String
+  alt           String?
+  order         Int       @default(0)
   
+  // Product relationship
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId     String
 
-  isPublished    Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([productId])
 }
 
-model Blog {
-  id             String    @id @default(uuid())
-  title          String
-  url            String    @db.VarChar(255)
-  author         String?
-  description    String?   @db.Text
-  publishedAt    DateTime?
-
-  sectionId      String?
-  section        Section?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  userId         String
-  user           User      @relation("UserBlogs", fields: [userId], references: [id], onDelete: Cascade)
-
-  category     String?
-
-
-  isPublished    Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-}
-
-model Article {
-  id             String    @id @default(uuid())
-  title          String
-  url            String    @db.VarChar(255)
-  source         String?   // Source of the article (e.g., Medium, New York Times)
-  summary        String?   @db.Text
-  publishedAt    DateTime?
-
-  sectionId      String?
-  section        Section?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  userId         String
-  user           User      @relation("UserArticles", fields: [userId], references: [id], onDelete: Cascade)
-
-  category     String?
-
-
-  isPublished    Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-}
-
-model Note {
-  id             String    @id @default(uuid())
-  title          String
-  content        String    @db.Text
-  isImportant    Boolean   @default(false) // Flag to mark important notes
-  position       Int       // Position within a section if ordered
-
-  sectionId      String?
-  section        Section?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  userId         String
-  user           User      @relation("UserNotes", fields: [userId], references: [id], onDelete: Cascade)
-
-  category     String?
+// Category Request Model (for new category requests)
+model CategoryRequest {
+  id            String    @id @default(cuid())
+  mainCategory  String
+  subCategory   String?
+  finalCategory String?
+  description   String    @db.Text
+  status        String    @default("pending") // "pending" | "approved" | "rejected"
   
+  // User who requested
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
 
-  isPublished    Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
 }
 
-
-
-model ProfileLink {
-  id        String @id @default(cuid())
-  user      User   @relation(fields: [userId], references: [id])
-  userId    String
-  platform  String // Name of the social media platform (e.g., "Twitter", "Facebook")
-  url       String // URL of the social media profile
+// Review Model
+model Review {
+  id            String    @id @default(cuid())
+  rating        Int
+  comment       String?   @db.Text
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Relationships
+  product       Product   @relation(fields: [productId], references: [id])
+  productId     String
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([userId])
 }
+
+// Order Item Model
+model OrderItem {
+  id            String    @id @default(cuid())
+  quantity      Int
+  price         Decimal   @db.Decimal(10, 2)
+  
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  
+  order         Order     @relation(fields: [orderId], references: [id])
+  orderId       String
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([orderId])
+}
+
+// Order Model
+model Order {
+  id            String      @id @default(cuid())
+  status        String      // "pending" | "processing" | "completed" | "cancelled"
+  total         Decimal     @db.Decimal(10, 2)
+  
+  // Relationships
+  items         OrderItem[]
+  user          User        @relation(fields: [userId], references: [id])
+  userId        String
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId])
+}
+
 
 
 
@@ -311,89 +257,6 @@ model TwoFactorConfirmation {
 
 
 
-model Category {
-  id String @id @default(uuid())
-  name String @unique
-  courses Course[]
-}
-
-model Attachment {
-  id String @id @default(uuid())
-  name String
-  url String @db.Text
-
-  courseId String
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([courseId])
-}
-
-
-
-
-
-
-
-model Question {
-  id            String   @id @default(uuid())
-  text          String   @db.Text
-  
-  answers       Answer[]
-  sectionId     String?
-  section       Section?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model Answer {
-  id          String   @id @default(uuid())
-  text        String   @db.Text
-  isCorrect   Boolean  @default(false)
-  questionId  String
-  question    Question @relation(fields: [questionId], references: [id],onDelete: Cascade)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-
-
-model UserProgress {
-  id String @id @default(uuid())
-  userId String
-
-  chapterId String
-  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-
-  sectionId String @unique
-  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  isCompleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([chapterId])
-  @@unique([userId, chapterId])
-}
-
-model Purchase {
-  id String @id @default(uuid())
-  userId String
-
-  courseId String
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-
-  @@unique([userId, courseId])
-  @@index([courseId])
-}
 
 model StripeCustomer {
   id String @id @default(uuid())
@@ -533,65 +396,9 @@ enum ReactionType {
   ANGRY
 }
 
-model FavoriteVideo {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  title     String   // Title of the favorite video
-  platform  String   // Platform name (e.g., "YouTube", "Vimeo")
-  url       String   // URL of the video
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model FavoriteAudio {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  title     String   // Title of the favorite audio
-  platform  String   // Platform name (e.g., "Spotify", "SoundCloud")
-  url       String   // URL of the audio
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model FavoriteArticle {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  title     String   // Title of the favorite article
-  platform  String   // Platform name (e.g., "Medium", "NYTimes")
-  url       String   // URL of the article
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model FavoriteBlog {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  title     String   // Title of the favorite blog
-  platform  String   // Platform name (e.g., "WordPress", "Blogger")
-  url       String   // URL of the blog
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model FavoriteImage {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  title     String   // Title or description of the favorite image
-  platform  String   // Platform name (e.g., "Instagram", "Pinterest")
-  url       String   // URL of the image
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 
 

@@ -24,7 +24,7 @@ export const CourseCardHome = ({
   category
 }: CourseCardProps) => {
   return (
-    <Link href={`/courses/${id}`}>
+    <Link href={`/courses/${id}`} prefetch={true}>
         <div className="group hover:shadow-sm transition-all overflow-hidden border border-[#94a3b8] rounded-lg p-4 md:p-6 h-full block hover:scale-105 shadow-[rgba(50,50,93,0.25)_0px_6px_12px_-2px,_rgba(0,0,0,0.3)_0px_3px_7px_-3px] bg-gray-700">
             <div className="relative w-full aspect-video rounded-md overflow-hidden">
               <Image

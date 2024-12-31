@@ -14,6 +14,7 @@ import { SectionYoutubeVideoForm } from "./_components/section-video-form";
 import { SectionActions } from "./_components/sections-actions";
 import { VideoSectionForm } from "./_components/_videos/video-section";
 import { BlogSectionForm } from "./_components/_blogs/blog-section";
+import { GradientDivider } from "@/components/border";
 
 const SectionIdPage = async ({
   params
@@ -186,11 +187,13 @@ const SectionIdPage = async ({
                 sectionId={params.sectionId}
             />
           </div>
-          <h1 className="text-white/90 text-center text-3xl font-bold md:text-5xl p-4 mt-10">Sections for Personal Learning</h1>
+          <h1 className="text-white/90 text-center text-3xl font-bold md:text-5xl p-4 mt-10">Add Resources For This Section</h1>
+          <p className="text-neutral-300 text-center mb-5">You can add different videos and blogs that helps you to understand this section concept clearly. Also you can give each video a rating about their explanation and clear concept. You can write in the description about the video and blog</p>
+          <GradientDivider  />
           <div className="flex items-center gap-x-2 mt-5">
             <IconBadge icon={Video} />
             <h2 className="text-xl text-white/90 font-semibold ">
-              Add Video Sections
+              Add Video Links
             </h2>
           </div>
             <VideoSectionForm 
@@ -203,7 +206,7 @@ const SectionIdPage = async ({
         <div className="flex items-center gap-x-2 mt-5">
             <IconBadge icon={Video} />
             <h2 className="text-xl text-white/90 font-semibold ">
-              Add Blog Sections
+              Add Blog Links
             </h2>
           </div>
             <BlogSectionForm 

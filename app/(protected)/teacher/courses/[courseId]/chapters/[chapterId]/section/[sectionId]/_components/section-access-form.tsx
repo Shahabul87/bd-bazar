@@ -68,7 +68,7 @@ export const SectionAccessForm = ({
   }
 
   return (
-    <div className="mt-6 border border-[#94a3b8] bg-gray-700 rounded-md p-4">
+    <div className="mt-6 border border-neutral-400 bg-gray-800 rounded-md p-4">
       <div className="font-medium flex items-center justify-between text-white/90">
         Section access
         <Button onClick={toggleEdit} variant="ghost">

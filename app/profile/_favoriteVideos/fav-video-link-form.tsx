@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { FavoriteVideo } from "@prisma/client";
 import { FavoriteVideoList } from "./fav-video-link-list";
- // Assuming this is a component to list favorite videos
 
 import {
   Form,
@@ -40,9 +39,20 @@ export const FavoriteVideoLinkForm = ({
 }: FavoriteVideoLinkFormProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editingVideoId, setEditingVideoId] = useState<string | null>(null);
 
   const toggleCreating = () => {
     setIsCreating((current) => !current);
+    setEditMode(false);
+    form.reset();
+  };
+
+  const cancelEditMode = () => {
+    setEditMode(false);
+    setEditingVideoId(null);
+    form.reset();
   };
 
   const router = useRouter();
@@ -58,9 +68,7 @@ export const FavoriteVideoLinkForm = ({
   });
 
   const { isSubmitting, isValid } = form.formState;
-
   const watchedValues = form.watch();
-
   const isFormComplete = !!watchedValues.title && !!watchedValues.platform && !!watchedValues.url;
 
   useEffect(() => {
@@ -70,7 +78,6 @@ export const FavoriteVideoLinkForm = ({
   }, [isFormComplete, isValid, watchedValues]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
     try {
       await axios.post(`/api/users/${userId}/favorite-videos`, values);
       toast.success("Favorite video added");
@@ -78,6 +85,24 @@ export const FavoriteVideoLinkForm = ({
       router.refresh();
     } catch {
       toast.error("Something went wrong");
+    }
+  };
+
+  const onSave = async (values: z.infer<typeof formSchema>) => {
+    if (!editingVideoId) return;
+
+    try {
+      setIsUpdating(true);
+      await axios.patch(`/api/users/${userId}/favorite-videos/${editingVideoId}`, values);
+      toast.success("Favorite video updated");
+      setEditMode(false);
+      setEditingVideoId(null);
+      form.reset();
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -97,7 +122,27 @@ export const FavoriteVideoLinkForm = ({
   };
 
   const onEdit = (id: string) => {
-    router.push(`/user/${userId}/favorite-videos/${id}`);
+    const videoToEdit = favoriteVideos.find((video) => video.id === id);
+    if (videoToEdit) {
+      setEditMode(true);
+      setEditingVideoId(id);
+      form.setValue("title", videoToEdit.title);
+      form.setValue("platform", videoToEdit.platform);
+      form.setValue("url", videoToEdit.url);
+    }
+  };
+
+  const onDelete = async (videoId: string) => {
+    try {
+      setIsLoading(true);
+      await axios.delete(`/api/users/${userId}/favorite-videos/${videoId}`);
+      toast.success("Favorite video deleted");
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -119,9 +164,9 @@ export const FavoriteVideoLinkForm = ({
           )}
         </Button>
       </div>
-      {isCreating && (
+      {(isCreating || editMode) && (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+          <form onSubmit={form.handleSubmit(editMode ? onSave : onSubmit)} className="space-y-4 mt-4">
             <FormField
               control={form.control}
               name="title"
@@ -129,7 +174,7 @@ export const FavoriteVideoLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Video Title (e.g., My Favorite Video)"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -146,7 +191,7 @@ export const FavoriteVideoLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Platform (e.g., YouTube)"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -163,7 +208,7 @@ export const FavoriteVideoLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Video URL"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -173,13 +218,20 @@ export const FavoriteVideoLinkForm = ({
                 </FormItem>
               )}
             />
-            <Button disabled={!isFormComplete || isSubmitting} type="submit">
-              Create
-            </Button>
+            <div className="flex space-x-2">
+              <Button disabled={!isFormComplete || isSubmitting || isUpdating} type="submit">
+                {editMode ? "Save" : "Create"}
+              </Button>
+              {editMode && (
+                <Button variant="outline" onClick={cancelEditMode} disabled={isSubmitting || isUpdating} className="text-black">
+                  Cancel
+                </Button>
+              )}
+            </div>
           </form>
         </Form>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <div
           className={cn(
             "text-sm mt-2",
@@ -188,11 +240,11 @@ export const FavoriteVideoLinkForm = ({
         >
           {favoriteVideos.length === 0 && "No favorite videos"}
           {favoriteVideos.length > 0 && (
-            <FavoriteVideoList onEdit={onEdit} onReorder={onReorder} items={favoriteVideos} />
+            <FavoriteVideoList onEdit={onEdit} onReorder={onReorder} onDelete={onDelete} items={favoriteVideos} />
           )}
         </div>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <p className="text-xs text-white/90 mt-4">
           Drag and drop to reorder favorite videos
         </p>

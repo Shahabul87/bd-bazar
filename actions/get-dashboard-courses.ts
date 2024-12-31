@@ -1,6 +1,5 @@
-import { Category, Chapter, Course } from "@prisma/client";
-
 import { db } from "@/lib/db";
+import { Category, Chapter, Course } from "@prisma/client";
 import { getProgress } from "@/actions/get-progress";
 
 type CourseWithProgressWithCategory = Course & {
@@ -12,13 +11,31 @@ type CourseWithProgressWithCategory = Course & {
 type DashboardCourses = {
   completedCourses: CourseWithProgressWithCategory[];
   coursesInProgress: CourseWithProgressWithCategory[];
-}
+};
 
-export const getDashboardCourses = async (userId: string): Promise<DashboardCourses> => {
+export const getDashboardCourses = async (userId: string | null): Promise<DashboardCourses> => {
+  const defaultResponse = {
+    completedCourses: [],
+    coursesInProgress: [],
+  };
+
   try {
+    if (!userId) {
+      return defaultResponse;
+    }
+
+    // First check if user exists
+    const user = await db.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return defaultResponse;
+    }
+
     const purchasedCourses = await db.purchase.findMany({
       where: {
-        userId: userId,
+        userId: userId
       },
       select: {
         course: {
@@ -26,7 +43,7 @@ export const getDashboardCourses = async (userId: string): Promise<DashboardCour
             category: true,
             chapters: {
               where: {
-                isPublished: true,
+                isPublished: true
               }
             }
           }
@@ -34,25 +51,43 @@ export const getDashboardCourses = async (userId: string): Promise<DashboardCour
       }
     });
 
-    const courses = purchasedCourses.map((purchase) => purchase.course) as CourseWithProgressWithCategory[];
-
-    for (let course of courses) {
-      const progress = await getProgress(userId, course.id);
-      course["progress"] = progress;
+    if (!purchasedCourses) {
+      return defaultResponse;
     }
 
-    const completedCourses = courses.filter((course) => course.progress === 100);
-    const coursesInProgress = courses.filter((course) => (course.progress ?? 0) < 100);
+    const courses = purchasedCourses
+      .filter(purchase => purchase?.course) // Filter out null courses
+      .map(({ course }) => ({
+        ...course,
+        progress: null
+      } as CourseWithProgressWithCategory));
+
+    // Process progress for each course
+    for (let course of courses) {
+      try {
+        const progress = await getProgress(userId, course.id);
+        course.progress = progress ?? 0; // Use nullish coalescing to default to 0
+      } catch (error) {
+        console.error(`Error getting progress for course ${course.id}:`, error);
+        course.progress = 0;
+      }
+    }
+
+    const completedCourses = courses.filter(course => 
+      (course.progress ?? 0) === 100
+    );
+
+    const coursesInProgress = courses.filter(course => 
+      (course.progress ?? 0) < 100
+    );
 
     return {
       completedCourses,
       coursesInProgress,
-    }
+    };
+
   } catch (error) {
-    console.log("[GET_DASHBOARD_COURSES]", error);
-    return {
-      completedCourses: [],
-      coursesInProgress: [],
-    }
+    console.error("[GET_DASHBOARD_COURSES]", error);
+    return defaultResponse;
   }
-}
+};

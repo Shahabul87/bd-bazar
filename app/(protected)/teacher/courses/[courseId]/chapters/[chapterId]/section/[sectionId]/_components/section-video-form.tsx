@@ -54,7 +54,7 @@ export const SectionYoutubeVideoForm = ({
   }
 
   return (
-    <div className="mt-6 border border-[#94a3b8] bg-gray-700  rounded-md p-4">
+    <div className="mt-6 border border-[#94a3b8] bg-gray-700  rounded-md p-4 mb-5">
       <div className="font-medium flex items-center justify-between text-white/90 mb-2">
         Section video
         <Button onClick={toggleEdit} variant="ghost">
@@ -63,20 +63,17 @@ export const SectionYoutubeVideoForm = ({
       </div>
       {!isEditing ? (
         initialData.videoUrl ? (
-          <div className="relative aspect-video mt-4">
-            {/* Displaying YouTube iframe if videoUrl exists */}
-            
-            <iframe
-              width="700"
-              height="400"
-              className="rounded-md"
-              src={`https://www.youtube.com/embed/${new URL(videoUrl).searchParams.get("v")}`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-            
+          <div className="relative w-full aspect-video mt-4">
+            {videoUrl && (
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-md"
+                src={`https://www.youtube.com/embed/${new URL(videoUrl).searchParams.get("v")}`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-center h-60 bg-slate-300 rounded-md">

@@ -1,77 +1,49 @@
 "use client";
 
-import Image from "next/image";
 import { CourseTabs } from "./course-tab";
+import { Chapter } from "@prisma/client";
 
-export function CourseTabsDemo() {
-  const tabs = [
-    {
-      title: "Chapter 1",
-      value: "Course Objectives",
-      content: (
-        <div className="w-full overflow-hidden relative h-full rounded-2xl p-10 text-xl md:text-4xl font-bold text-white  bg-gray-700 border border-[#94a3b8]">
-          <p> What you will lean in chapter 1</p>
-          <DummyContent />
-        </div>
-      ),
-    },
-    {
-      title: "Chapter 2",
-      value: "Learning Outcomes",
-      content: (
-        <div className="w-full overflow-hidden relative h-full rounded-2xl p-10 text-xl md:text-4xl font-bold text-white  bg-gray-700 border border-[#94a3b8]">
-          <p>Chapter 1</p>
-          <DummyContent />
-        </div>
-      ),
-    },
-    {
-      title: "Chapter 3",
-      value: "Description",
-      content: (
-        <div className="w-full overflow-hidden relative h-full rounded-2xl p-10 text-xl md:text-4xl font-bold text-white  bg-gray-700 border border-[#94a3b8]">
-          <p>Description tab</p>
-          <DummyContent />
-        </div>
-      ),
-    },
-    {
-      title: "Chapter 4",
-      value: "content",
-      content: (
-        <div className="w-full overflow-hidden relative h-full rounded-2xl p-10 text-xl md:text-4xl font-bold text-white  bg-gray-700 border border-[#94a3b8]">
-          <p>Content tab</p>
-          <DummyContent />
-        </div>
-      ),
-    },
-    {
-      title: "Reviews",
-      value: "Reviews",
-      content: (
-        <div className="w-full overflow-hidden relative h-full rounded-2xl p-10 text-xl md:text-4xl font-bold text-white bg-gray-700 border border-[#94a3b8]">
-          <p>Reviews tab</p>
-          <DummyContent />
-        </div>
-      ),
-    },
-  ];
+interface CourseTabsDemoProps {
+  chapters: Chapter[];
+}
+
+export function CourseTabsDemo({ chapters }: CourseTabsDemoProps) {
+  // Map through chapters data to create tabs dynamically
+  const tabs = chapters.map((chapter, index) => ({
+    title: `Chapter ${index + 1}`,
+    value: chapter.title, // Display chapter title
+    content: (
+      <div className="w-full overflow-hidden relative h-full rounded-2xl p-10 text-xl md:text-4xl font-bold text-white bg-gray-700 border border-[#94a3b8]">
+        <h2 className="text-2xl md:text-3xl mb-4 text-cyan-600">{chapter.title}</h2>
+        <LearningOutcomes outcomes={chapter.learningOutcomes} />
+      </div>
+    ),
+  }));
 
   return (
-    <div className="h-[20rem] md:h-[40rem] [perspective:1000px] relative b flex flex-col p-3 md:p-2 lg:p-0 max-w-5xl mx-auto w-full  items-start justify-start mt-20 mb-40">
+    <div className="h-[20rem] md:h-[40rem] [perspective:1000px] relative flex flex-col p-3 md:p-2 lg:p-0 max-w-5xl mx-auto w-full items-start justify-start mt-20 mb-40">
       <CourseTabs tabs={tabs} />
     </div>
   );
 }
 
-const DummyContent = () => {
+// Component to display learning outcomes as a bullet-point list
+const LearningOutcomes = ({ outcomes }: { outcomes?: string | null }) => {
+  if (!outcomes) return <p>No specific learning outcomes provided.</p>;
+
+  // Parse the outcomes as bullet points if structured as HTML or plain text
+  const points = outcomes.includes("<p>")
+    ? outcomes.match(/<p>(.*?)<\/p>/g)?.map((item) => item.replace(/<\/?p>/g, "").trim())
+    : outcomes.split(".").map((item) => item.trim()).filter(Boolean); // For non-HTML format, split by periods
+
   return (
-    <Image
-      src="/image1.webp"
-      alt="dummy image"
-      width="1000"
-      height="1000"
-      className="object-cover object-left-top h-[60%]  md:h-[90%] absolute -bottom-10 inset-x-0 w-[90%] rounded-xl mx-auto"
-    />
+    <ul className="list-disc list-inside text-lg md:text-xl text-neutral-300">
+      {points?.map((point, index) => (
+        <li key={index} className="mb-3">
+          {point}
+        </li>
+      )) || <li>No specific learning outcomes available.</li>}
+    </ul>
   );
 };
+

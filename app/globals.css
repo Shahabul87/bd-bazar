@@ -149,3 +149,402 @@ body,
 .no-visible-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Icon glow effects */
+.icon-glow {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+}
+
+.icon-glow-hover:hover {
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
+}
+
+/* Enhanced badge styles */
+.badge-glow {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+  animation: badgePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Elegant hover transitions */
+.hover-lift {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Icon container styles */
+.icon-container {
+  @apply relative flex items-center justify-center;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.icon-container::after {
+  content: '';
+  @apply absolute inset-0 rounded-full opacity-0 transition-opacity;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+}
+
+.icon-container:hover::after {
+  opacity: 1;
+}
+
+/* Gradient text styles */
+.text-gradient-primary {
+  @apply bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent;
+}
+
+.text-gradient-accent {
+  @apply bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent;
+}
+
+.text-gradient-hover {
+  @apply transition-all duration-300;
+}
+
+.text-gradient-hover:hover {
+  @apply bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent;
+}
+
+/* Animated gradient background */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Enhanced font rendering */
+.font-smooth {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Text shadow for better contrast */
+.text-shadow {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.text-shadow-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Menu item hover effect */
+.menu-item {
+  @apply relative overflow-hidden;
+}
+
+.menu-item::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-purple-500
+    transform scale-x-0 transition-transform duration-300;
+}
+
+.menu-item:hover::after {
+  @apply scale-x-100;
+}
+
+/* Theme transition styles */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Theme switcher animation */
+@keyframes sunRise {
+  from {
+    transform: rotate(-120deg) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes moonRise {
+  from {
+    transform: rotate(120deg) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.theme-switch-sun {
+  animation: sunRise 0.3s ease;
+}
+
+.theme-switch-moon {
+  animation: moonRise 0.3s ease;
+}
+
+/* Improved dark mode colors */
+:root[class~="dark"] {
+  --primary-glow: radial-gradient(rgba(1, 65, 255, 0.4), rgba(1, 65, 255, 0));
+  --secondary-glow: linear-gradient(
+    to bottom right,
+    rgba(1, 65, 255, 0),
+    rgba(1, 65, 255, 0),
+    rgba(1, 65, 255, 0.3)
+  );
+}
+
+/* Light theme specific gradients */
+:root {
+  --gradient-primary: linear-gradient(135deg, #4F46E5, #7C3AED);
+  --gradient-secondary: linear-gradient(135deg, #6B7280, #4B5563);
+  --gradient-accent: linear-gradient(135deg, #EC4899, #8B5CF6);
+}
+
+/* Dark theme specific gradients */
+:root[class~="dark"] {
+  --gradient-primary: linear-gradient(135deg, #93C5FD, #C4B5FD);
+  --gradient-secondary: linear-gradient(135deg, #E5E7EB, #9CA3AF);
+  --gradient-accent: linear-gradient(135deg, #F9A8D4, #C4B5FD);
+}
+
+/* Updated text gradient classes */
+.text-gradient {
+  @apply bg-clip-text text-transparent transition-colors duration-200;
+}
+
+.text-gradient-primary {
+  background-image: var(--gradient-primary);
+  @apply text-gradient;
+}
+
+.text-gradient-secondary {
+  background-image: var(--gradient-secondary);
+  @apply text-gradient;
+}
+
+.text-gradient-accent {
+  background-image: var(--gradient-accent);
+  @apply text-gradient;
+}
+
+/* Enhanced hover effects for light theme */
+.hover-gradient-light:hover {
+  background-image: var(--gradient-primary);
+  @apply text-white transition-all duration-300;
+}
+
+/* Updated theme transition */
+.theme-transition {
+  @apply transition-all duration-300;
+}
+
+/* Light theme specific shadows */
+.light-shadow {
+  @apply shadow-lg shadow-gray-200/50 dark:shadow-none;
+}
+
+/* Enhanced text contrast for light theme */
+.text-enhanced {
+  @apply text-gray-800 dark:text-gray-200;
+}
+
+.text-enhanced-secondary {
+  @apply text-gray-600 dark:text-gray-400;
+}
+
+/* Enhanced icon styles */
+.icon-base {
+  @apply transition-all duration-200;
+}
+
+/* Icon shadows for better visibility */
+.icon-shadow-light {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.icon-shadow-dark {
+  filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.1));
+}
+
+/* Enhanced badge styles */
+.badge-gradient {
+  @apply animate-pulse shadow-lg;
+  animation: badgePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Icon hover effects */
+.icon-hover-effect {
+  @apply transition-transform duration-200 ease-out;
+}
+
+.icon-hover-effect:hover {
+  @apply scale-110;
+}
+
+/* Custom animations for icons */
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.icon-float {
+  animation: iconFloat 2s ease-in-out infinite;
+}
+
+/* Enhanced notification badge */
+.notification-badge {
+  @apply absolute -top-1 -right-1 h-5 w-5 
+    flex items-center justify-center 
+    text-xs font-medium text-white 
+    rounded-full shadow-lg transform 
+    transition-all duration-200;
+}
+
+.notification-badge:hover {
+  @apply scale-110;
+}
+
+/* Add these styles for better input focus effects */
+.outline-below {
+  @apply relative;
+}
+
+.outline-below::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-full h-0.5 bg-transparent
+    transform scale-x-0 transition-transform duration-200;
+}
+
+.outline-below:focus-within::after {
+  @apply bg-blue-500 scale-x-100;
+}
+
+/* Smooth label transitions */
+.label-transition {
+  @apply transition-all duration-200 transform-gpu;
+}
+
+/* Input focus ring adjustment */
+.focus-ring-adjusted {
+  @apply focus:ring-offset-0 focus:ring-2 focus:ring-blue-500/20;
+}
+
+/* Social login button styles */
+.social-button {
+  @apply relative flex items-center justify-center w-full px-4 py-3 
+    text-base font-medium transition-all duration-200 
+    rounded-lg outline-none gap-3;
+}
+
+.social-button-github {
+  @apply bg-gray-900 text-white hover:bg-gray-800;
+}
+
+.social-button-facebook {
+  @apply bg-[#1877F2] text-white hover:bg-[#0C63D4];
+}
+
+/* Divider styles */
+.divider {
+  @apply relative my-6;
+}
+
+.divider-line {
+  @apply absolute top-1/2 left-0 w-full border-t border-gray-200 dark:border-gray-700;
+}
+
+.divider-text {
+  @apply relative z-10 bg-white dark:bg-gray-800 px-4 text-sm text-gray-500 
+    dark:text-gray-400 inline-block left-1/2 -translate-x-1/2;
+}
+
+/* Gradient divider animation */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-divider {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    theme('colors.gray.300'),
+    transparent
+  );
+  background-size: 1px 200%;
+  animation: gradientFlow 3s ease infinite;
+}
+
+.dark .gradient-divider {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    theme('colors.gray.600'),
+    transparent
+  );
+}
+
+/* Gradient animation for text */
+@keyframes gradient-x {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 8s ease infinite;
+}
+
+/* Header underline animation */
+.header-underline {
+  @apply relative inline-block;
+}
+
+.header-underline::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-full h-0.5 
+    bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+    dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400
+    transform scale-x-0 transition-transform duration-300;
+}
+
+.header-underline:hover::after {
+  @apply scale-x-100;
+}

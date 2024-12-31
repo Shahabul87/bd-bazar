@@ -38,9 +38,20 @@ export const ProfileLinkForm = ({
 }: ProfileLinkFormProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
 
   const toggleCreating = () => {
     setIsCreating((current) => !current);
+    setEditMode(false);
+    form.reset();
+  };
+
+  const cancelEditMode = () => {
+    setEditMode(false);
+    setEditingLinkId(null);
+    form.reset();
   };
 
   const router = useRouter();
@@ -55,9 +66,7 @@ export const ProfileLinkForm = ({
   });
 
   const { isSubmitting, isValid } = form.formState;
-
   const watchedValues = form.watch();
-
   const isFormComplete = !!watchedValues.platform && !!watchedValues.url;
 
   useEffect(() => {
@@ -67,7 +76,6 @@ export const ProfileLinkForm = ({
   }, [isFormComplete, isValid, watchedValues]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
     try {
       await axios.post(`/api/users/${userId}/profile-links`, values);
       toast.success("Profile link created");
@@ -75,6 +83,24 @@ export const ProfileLinkForm = ({
       router.refresh();
     } catch {
       toast.error("Something went wrong");
+    }
+  };
+
+  const onSave = async (values: z.infer<typeof formSchema>) => {
+    if (!editingLinkId) return;
+    
+    try {
+      setIsUpdating(true);
+      await axios.patch(`/api/users/${userId}/profile-links/${editingLinkId}`, values);
+      toast.success("Profile link updated");
+      setEditMode(false);
+      setEditingLinkId(null);
+      form.reset();
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -86,7 +112,8 @@ export const ProfileLinkForm = ({
       });
       toast.success("Profile links reordered");
       router.refresh();
-    } catch {
+    } catch (error) {
+      console.error("Reorder error:", error);
       toast.error("Something went wrong");
     } finally {
       setIsUpdating(false);
@@ -94,7 +121,26 @@ export const ProfileLinkForm = ({
   };
 
   const onEdit = (id: string) => {
-    router.push(`/user/${userId}/profile-links/${id}`);
+    const linkToEdit = profileLinks.find((link) => link.id === id);
+    if (linkToEdit) {
+      setEditMode(true);
+      setEditingLinkId(id);
+      form.setValue("platform", linkToEdit.platform);
+      form.setValue("url", linkToEdit.url);
+    }
+  };
+
+  const onDelete = async (profileLinkId: string) => {
+    try {
+      setIsLoading(true);
+      await axios.delete(`/api/users/${userId}/profile-links/${profileLinkId}`);
+      toast.success("Profile link deleted");
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -116,9 +162,12 @@ export const ProfileLinkForm = ({
           )}
         </Button>
       </div>
-      {isCreating && (
+      {(isCreating || editMode) && (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+          <form
+            onSubmit={form.handleSubmit(editMode ? onSave : onSubmit)}
+            className="space-y-4 mt-4"
+          >
             <FormField
               control={form.control}
               name="platform"
@@ -126,7 +175,7 @@ export const ProfileLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Platform (e.g., Twitter)"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -143,7 +192,7 @@ export const ProfileLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Profile URL"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -153,13 +202,27 @@ export const ProfileLinkForm = ({
                 </FormItem>
               )}
             />
-            <Button disabled={!isFormComplete || isSubmitting} type="submit">
-              Create
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                disabled={!isFormComplete || isSubmitting || isUpdating}
+                type="submit"
+              >
+                {editMode ? "Save" : "Create"}
+              </Button>
+              {editMode && (
+                <Button
+                  variant="outline"
+                  onClick={cancelEditMode}
+                  disabled={isSubmitting || isUpdating}
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
           </form>
         </Form>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <div
           className={cn(
             "text-sm mt-2",
@@ -168,11 +231,16 @@ export const ProfileLinkForm = ({
         >
           {profileLinks.length === 0 && "No profile links"}
           {profileLinks.length > 0 && (
-            <ProfileLinkList onEdit={onEdit} onReorder={onReorder} items={profileLinks} />
+            <ProfileLinkList
+              onEdit={onEdit}
+              onReorder={onReorder}
+              onDelete={onDelete}
+              items={profileLinks}
+            />
           )}
         </div>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <p className="text-xs text-white/90 mt-4">
           Drag and drop to reorder the profile links
         </p>

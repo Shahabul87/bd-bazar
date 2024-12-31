@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { Mail, Phone, Lock, ArrowRight } from 'lucide-react';
 
 export const LoginFormNew: React.FC = () => {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({
-    'Email': '',
+    'Email or Phone': '',
     'Password': ''
   });
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({
-    'Email': null,
+    'Email or Phone': null,
     'Password': null
   });
 
@@ -19,111 +22,187 @@ export const LoginFormNew: React.FC = () => {
 
   const handleBlur = (label: string) => {
     setFocusedInput(null);
-
-    // Perform validation on blur
-    if (label === 'Email' && inputValues['Email']) {
-      validateEmail();
+    if (label === 'Email or Phone' && inputValues['Email or Phone']) {
+      validateEmailOrPhone();
     }
   };
 
   const handleChange = (label: string, value: string) => {
-    setInputValues(prevValues => ({
-      ...prevValues,
+    setInputValues(prev => ({
+      ...prev,
       [label]: value
     }));
-
-    // Clear error when user starts typing again
-    setErrors(prevErrors => ({
-      ...prevErrors,
+    setErrors(prev => ({
+      ...prev,
       [label]: null
     }));
   };
 
-  const validateEmail = () => {
-    const email = inputValues['Email'];
+  const validateEmailOrPhone = () => {
+    const value = inputValues['Email or Phone'];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        'Email': "That's not a valid email. Please try again."
+    const phoneRegex = /^\+?[\d\s-]{10,}$/;
+
+    if (loginMethod === 'email' && !emailRegex.test(value)) {
+      setErrors(prev => ({
+        ...prev,
+        'Email or Phone': "Please enter a valid email address"
+      }));
+    } else if (loginMethod === 'phone' && !phoneRegex.test(value)) {
+      setErrors(prev => ({
+        ...prev,
+        'Email or Phone': "Please enter a valid phone number"
       }));
     } else {
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        'Email': null
+      setErrors(prev => ({
+        ...prev,
+        'Email or Phone': null
       }));
     }
   };
 
   return (
-    <div className="justify-center items-center h-3/4 bg-gray-800 w-1/2">
-      <div className="flex flex-col items-center justify-center">
-        <h2 className="text-3xl lg:text-5xl font-bold mb-6 p-4 text-white">Log In</h2>
-        <p className="mb-8 text-cyan-500 font-semibold text-base md:text-lg">
-          Don't have an account?{' '}
-          <a href="/register" className="text-blue-500 hover:underline font-semibold">
-            Sign Up
-          </a>
-        </p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 overflow-hidden max-w-7xl w-full">
-        {/* Left side - Log in form */}
-        <div className="md:p-8">
-          <form>
-            {['Email', 'Password'].map((label, index) => (
-              <div key={index} className="relative mb-6">
-                <input
-                  type={label === 'Password' ? 'password' : 'email'}
-                  id={label}
-                  value={inputValues[label]}
-                  onChange={(e) => handleChange(label, e.target.value)}
-                  onFocus={() => handleFocus(label)}
-                  onBlur={() => handleBlur(label)}
-                  className={`w-full px-4 pt-4 pb-2 border-b-2 transition-all bg-gray-800 text-white ${
-                    focusedInput === label || inputValues[label]
-                      ? errors[label] ? 'border-red-500' : 'border-blue-500'
-                      : 'border-gray-100/10'
-                  } focus:border-blue-500 outline-none`}
-                  required
-                />
-                <label
-                  htmlFor={label}
-                  className={`absolute left-4 text-gray-500 transition-all pointer-events-none ${
-                    focusedInput === label || inputValues[label] ? '-top-2 text-xs' : 'top-4'
-                  } ${errors[label] ? 'text-red-500' : ''}`}
-                >
-                  {label}
-                </label>
-                {errors[label] && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <span className="mr-1">⚠️</span>{errors[label]}
-                  </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 
+      dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl 
+        overflow-hidden transition-all duration-300">
+        <div className="p-8">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 
+            bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 
+            bg-clip-text text-transparent">
+            Welcome Back
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            Don&apos;t have an account?{' '}
+            <Link href="/auth/register" 
+              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 
+                font-medium transition-colors">
+              Sign Up
+            </Link>
+          </p>
+
+          {/* Login Method Toggle */}
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setLoginMethod('email')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all
+                ${loginMethod === 'email' 
+                  ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' 
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            >
+              <Mail className="h-4 w-4" />
+              <span>Email</span>
+            </button>
+            <button
+              onClick={() => setLoginMethod('phone')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all
+                ${loginMethod === 'phone' 
+                  ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' 
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            >
+              <Phone className="h-4 w-4" />
+              <span>Phone</span>
+            </button>
+          </div>
+
+          <form className="space-y-6">
+            {/* Email/Phone Input */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                {loginMethod === 'email' ? (
+                  <Mail className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Phone className="h-5 w-5 text-gray-400" />
                 )}
               </div>
-            ))}
-            <div className="flex justify-end mb-6">
-              <a href="/forgot-password" className="text-blue-500 hover:underline text-sm">
-                Forgot Password?
-              </a>
+              <input
+                type={loginMethod === 'email' ? 'email' : 'tel'}
+                placeholder={loginMethod === 'email' ? 'Enter your email' : 'Enter your phone number'}
+                value={inputValues['Email or Phone']}
+                onChange={(e) => handleChange('Email or Phone', e.target.value)}
+                onFocus={() => handleFocus('Email or Phone')}
+                onBlur={() => handleBlur('Email or Phone')}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg 
+                  text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
+                  focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 
+                  transition-all duration-300"
+              />
+              {errors['Email or Phone'] && (
+                <p className="mt-2 text-sm text-red-500 dark:text-red-400">
+                  {errors['Email or Phone']}
+                </p>
+              )}
             </div>
+
+            {/* Password Input */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={inputValues['Password']}
+                onChange={(e) => handleChange('Password', e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg 
+                  text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
+                  focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 
+                  transition-all duration-300"
+              />
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="flex justify-end">
+              <Link href="/auth/forgot-password" 
+                className="text-sm text-indigo-600 dark:text-indigo-400 
+                  hover:text-indigo-500 font-medium">
+                Forgot Password?
+              </Link>
+            </div>
+
+            {/* Login Button */}
             <button
               type="submit"
-              className="w-full py-2 bg-gray-700 text-white rounded hover:bg-blue-700 transition"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 
+                bg-gradient-to-r from-indigo-600 to-purple-600 
+                hover:from-indigo-500 hover:to-purple-500
+                text-white rounded-lg font-medium shadow-lg 
+                hover:shadow-xl transform hover:-translate-y-0.5 
+                transition-all duration-300"
             >
-              Log In
+              Sign In
+              <ArrowRight className="h-5 w-5" />
             </button>
           </form>
-        </div>
 
-        {/* Right side - Social login */}
-        <div className="bg-gray-800 flex flex-col justify-center items-center">
-          <p className="mb-4 text-white/80 font-bold md:text-lg">or</p>
-          <button className="flex items-center w-3/4 py-2 mb-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
-            Continue with Google
-          </button>
-          <button className="flex items-center w-3/4 py-2 bg-blue-800 text-white rounded hover:bg-blue-900 transition">
-            Continue with Facebook
-          </button>
+          {/* Social Login */}
+          <div className="mt-8">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <button className="flex items-center justify-center gap-2 px-4 py-2 
+                bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 
+                rounded-lg border border-gray-200 dark:border-gray-600
+                hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300">
+                Google
+              </button>
+              <button className="flex items-center justify-center gap-2 px-4 py-2 
+                bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 
+                rounded-lg border border-gray-200 dark:border-gray-600
+                hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300">
+                Facebook
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

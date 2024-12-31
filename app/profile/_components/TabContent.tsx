@@ -3,12 +3,12 @@
 import { ProfileLinksContent } from "../profilelinkscontent";
 import ServerSettingsContent from "../server-settings-content";
 import SettingsContent from "../settings-content";
-import { ProfileLink, FavoriteVideo, FavoriteAudio, FavoriteBlog, FavoriteArticle } from "@prisma/client";
+import { ProfileLink, FavoriteVideo, FavoriteAudio, FavoriteBlog, FavoriteArticle,Subscription } from "@prisma/client";
 import { FavoriteVideoLinkForm } from "../_favoriteVideos/fav-video-link-form";
 import { FavoriteAudioLinkForm } from "../_favoriteAudios/fav-audio-link-form"; // Assuming you have a form for favorite audios
 import { FavoriteBlogLinkForm } from "../_favoriteBlogs/fav-blog-link-form";
 import { FavoriteArticleLinkForm } from "../_favoriteArticles/fav-article-link-form";
-
+import { SubscriptionLinkForm } from "../_subscription/subscription-link-form";
 
 interface TabContentProps {
   selectedTab: string;
@@ -18,6 +18,7 @@ interface TabContentProps {
   favoriteAudios: FavoriteAudio[];
   favoriteBlogs: FavoriteBlog[];
   favoriteArticles: FavoriteArticle[];
+  subscriptions: Subscription[];
 }
 
 const TabContent: React.FC<TabContentProps> = ({ 
@@ -27,10 +28,11 @@ const TabContent: React.FC<TabContentProps> = ({
   favoriteVideos, 
   favoriteAudios, 
   favoriteBlogs, 
-  favoriteArticles 
+  favoriteArticles,
+  subscriptions,
 }) => {
 
-  console.log("favoriteArticles prop tab content:", favoriteArticles); 
+  
   switch (selectedTab) {
     case "IDEAS":
       return <p>User has no published ideas yet</p>;
@@ -54,6 +56,8 @@ const TabContent: React.FC<TabContentProps> = ({
       return <p>User follows nobody</p>;
     case "SETTINGS":
       return <SettingsContent userId={userId} />;
+    case "SUBSCRIPTION":
+      return <SubscriptionLinkForm userId={userId} subscriptions={subscriptions} />;
     default:
       return null;
   }

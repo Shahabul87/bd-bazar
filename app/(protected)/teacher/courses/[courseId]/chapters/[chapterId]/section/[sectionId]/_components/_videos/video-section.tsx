@@ -8,7 +8,8 @@ import { Loader2, PlusCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Chapter, Section, Video, Blog, Article, Note } from "@prisma/client";
+import { Chapter, Section, Video } from "@prisma/client";
+import { VideoSectionList } from "./video-section-list";
 
 import {
   Form,
@@ -20,29 +21,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { VideoSectionList } from "./video-section-list";
-
-// interface VideoSectionFormProps {
-//   chapter: Chapter & { sections?: (Section & { videos: Video[] })[] };
-//   courseId: string;
-//   chapterId: string;
-//   sectionId: string; // Add sectionId here
-// }
 
 interface VideoSectionFormProps {
   chapter: Chapter & {
     sections?: (Section & {
       videos: Video[];
-      blogs: Blog[];
-      articles: Article[];
-      notes: Note[];
     })[];
   };
   courseId: string;
   chapterId: string;
-  sectionId: string; // Add sectionId here
+  sectionId: string;
 }
-
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -57,13 +46,24 @@ export const VideoSectionForm = ({
   chapter,
   courseId,
   chapterId,
-  sectionId, // Add sectionId to function parameters
+  sectionId,
 }: VideoSectionFormProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editingVideoId, setEditingVideoId] = useState<string | null>(null);
 
   const toggleCreating = () => {
     setIsCreating((current) => !current);
+    setEditMode(false);
+    form.reset();
+  };
+
+  const cancelEditMode = () => {
+    setEditMode(false);
+    setEditingVideoId(null);
+    form.reset();
   };
 
   const router = useRouter();
@@ -78,12 +78,10 @@ export const VideoSectionForm = ({
       clarityRating: undefined,
       position: undefined,
     },
-    mode: "onChange", // Ensure validation runs on each change
+    mode: "onChange",
   });
 
   const { isSubmitting, isValid } = form.formState;
-
-  // Watch values to check if form is complete
   const watchedValues = form.watch();
 
   const isFormComplete =
@@ -104,7 +102,6 @@ export const VideoSectionForm = ({
   }, [isFormComplete, isValid, watchedValues]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values)
     try {
       await axios.post(
         `/api/courses/${courseId}/chapters/${chapterId}/section/${sectionId}/video`,
@@ -118,14 +115,35 @@ export const VideoSectionForm = ({
     }
   };
 
+
+  const onSave = async (values: z.infer<typeof formSchema>) => {
+    if (!editingVideoId) return;
+
+    try {
+      setIsUpdating(true);
+      // Include the videoId in the payload, not in the URL
+      const payload = { ...values, videoId: editingVideoId };
+
+      await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}/section/${sectionId}/video`, payload);
+      
+      toast.success("Video section updated");
+      setEditMode(false);
+      setEditingVideoId(null);
+      form.reset();
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+
   const onReorder = async (updateData: { id: string; position: number }[]) => {
     try {
       setIsUpdating(true);
-
-      await axios.put(`/api/courses/${courseId}/chapters/reorder`, {
-        list: updateData,
-      });
-      toast.success("Chapters reordered");
+      await axios.put(`/api/courses/${courseId}/chapters/${chapterId}/sections/${sectionId}/reorder`, { list: updateData });
+      toast.success("Videos reordered");
       router.refresh();
     } catch {
       toast.error("Something went wrong");
@@ -135,14 +153,44 @@ export const VideoSectionForm = ({
   };
 
   const onEdit = (id: string) => {
-    router.push(
-      `/teacher/courses/${courseId}/chapters/${chapterId}/section/${sectionId}/video/${id}`
-    );
+    const videoToEdit = chapter.sections
+      ?.find((section) => section.id === sectionId)
+      ?.videos.find((video) => video.id === id);
+  
+    if (videoToEdit) {
+      setEditMode(true);
+      setEditingVideoId(id);
+  
+      form.setValue("title", videoToEdit.title);
+      form.setValue("description", videoToEdit.description || "");
+      form.setValue("url", videoToEdit.url);
+      form.setValue("duration", videoToEdit.duration ?? 0); // Default to 0 if null
+      form.setValue("clarityRating", videoToEdit.clarityRating ?? 0); // Default to 0 if null
+      form.setValue("position", videoToEdit.position);
+    }
   };
+  
 
-  const allVideos = chapter && chapter.sections
-  ? chapter.sections.flatMap((section) => section.videos)
-  : [];
+  const onDelete = async (videoId: string) => {
+    try {
+      setIsLoading(true);
+      // Send videoId in the request body instead of the URL
+      await axios.delete(`/api/courses/${courseId}/chapters/${chapterId}/section/${sectionId}/video`, {
+        data: { videoId }, // Pass videoId in the data property for a DELETE request
+      });
+      toast.success("Video section deleted");
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+
+  const videosForSection = chapter.sections
+    ?.find((section) => section.id === sectionId)
+    ?.videos || [];
 
   return (
     <div className="relative mt-6 border border-[#94a3b8] bg-gray-700 rounded-md p-4">
@@ -163,9 +211,9 @@ export const VideoSectionForm = ({
           )}
         </Button>
       </div>
-      {isCreating && (
+      {(isCreating || editMode) && (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+          <form onSubmit={form.handleSubmit(editMode ? onSave : onSubmit)} className="space-y-4 mt-4">
             <FormField
               control={form.control}
               name="title"
@@ -173,7 +221,7 @@ export const VideoSectionForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Title"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -190,7 +238,7 @@ export const VideoSectionForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Description"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -207,7 +255,7 @@ export const VideoSectionForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Video URL"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -225,7 +273,7 @@ export const VideoSectionForm = ({
                   <FormControl>
                     <Input
                       type="number"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Duration (seconds)"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -244,7 +292,7 @@ export const VideoSectionForm = ({
                   <FormControl>
                     <Input
                       type="number"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Clarity Rating (1-5)"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -263,7 +311,7 @@ export const VideoSectionForm = ({
                   <FormControl>
                     <Input
                       type="number"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Position"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -274,30 +322,39 @@ export const VideoSectionForm = ({
                 </FormItem>
               )}
             />
-            <Button disabled={!isFormComplete || isSubmitting} type="submit">
-              Create
-            </Button>
+            <div className="flex space-x-2">
+              <Button disabled={!isFormComplete || isSubmitting || isUpdating} type="submit">
+                {editMode ? "Save" : "Create"}
+              </Button>
+              {editMode && (
+                <Button variant="outline" onClick={cancelEditMode} disabled={isSubmitting || isUpdating} className="text-black">
+                  Cancel
+                </Button>
+              )}
+            </div>
           </form>
         </Form>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <div
           className={cn(
             "text-sm mt-2",
-            allVideos.length === 0 && "text-cyan-500 italic font-semibold"
+            videosForSection.length === 0 && "text-cyan-500 italic font-semibold"
           )}
         >
-          {allVideos.length === 0 && "No video sections"}
-          {allVideos.length > 0 && (
+          {videosForSection.length === 0 && "No video sections"}
+          {videosForSection.length > 0 && (
             <VideoSectionList
               onEdit={onEdit}
               onReorder={onReorder}
-              items={allVideos}
+              onDelete={onDelete}
+              items={videosForSection}
+              sectionId={sectionId}
             />
           )}
         </div>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <p className="text-xs text-white/90 mt-4">
           Drag and drop to reorder the video sections
         </p>
@@ -305,5 +362,3 @@ export const VideoSectionForm = ({
     </div>
   );
 };
-
-

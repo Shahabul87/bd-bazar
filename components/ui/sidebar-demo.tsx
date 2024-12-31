@@ -19,9 +19,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { LogoutButton } from "@/components/auth/logout-button";
-
-import { Dashboard } from "@/app/(protected)/teacher/courses/dashboard";
 
 interface SidebarDemoProps {
   children: React.ReactNode;
@@ -40,7 +37,7 @@ export function SidebarDemo({ children }: SidebarDemoProps) {
       ),
     },
     {
-      label: "Profile",
+      label: "Profile Manager",
       href: "/profile",
       icon: (
         <IconUserBolt className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />

@@ -17,12 +17,18 @@ export async function POST(req: Request, { params }: { params: { userId: string 
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
-    // Create a new profile link in the database
+    // Determine the next position for the profile link
+    const profileLinksCount = await db.profileLink.count({
+      where: { userId: user.id },
+    });
+
+    // Create a new profile link in the database with the calculated position
     const newProfileLink = await db.profileLink.create({
       data: {
         platform,
         url,
         userId: user.id, // Associate profile link with the current user
+        position: profileLinksCount, // Set position to the next available index
       },
     });
 
@@ -36,3 +42,5 @@ export async function POST(req: Request, { params }: { params: { userId: string 
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
+
+

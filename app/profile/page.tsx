@@ -2,9 +2,10 @@ import Profile from "./_components/Profile";
 import { currentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import ConditionalHeader from "../(homepage)/user-header";
 
 const ProfileSettingsPage = async () => {
-  const user = await currentUser();
+  const user:any = await currentUser();
 
   if (!user?.id) {
     return redirect("/");
@@ -63,6 +64,17 @@ const ProfileSettingsPage = async () => {
     },
   });
 
+  const subscriptions = await db.subscription.findMany({
+    where: {
+      userId: userId,
+    },
+    orderBy: [
+      { position: 'asc' }, // If you want to sort by position first
+      { createdAt: 'asc' }, // Then sort by creation date
+    ],
+  });
+  
+
 
 
   if (!profileLinks && !favoriteVideos && !favoriteAudios && !favoriteBlogs && !favoriteArticles) {
@@ -71,6 +83,7 @@ const ProfileSettingsPage = async () => {
 
   return (
     <>
+    <ConditionalHeader user={user}/>
       <Profile 
         userId={userId} 
         username={username} 
@@ -79,6 +92,7 @@ const ProfileSettingsPage = async () => {
         favoriteAudios={favoriteAudios} 
         favoriteBlogs={favoriteBlogs} 
         favoriteArticles={favoriteArticles} 
+        subscriptions={subscriptions}
       />
     </>
   );

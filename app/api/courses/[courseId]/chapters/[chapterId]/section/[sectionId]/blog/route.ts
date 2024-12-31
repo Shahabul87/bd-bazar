@@ -91,3 +91,125 @@ export async function POST(
   }
 }
 
+
+
+
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { courseId: string; chapterId: string; sectionId: string } }
+) {
+  try {
+    const user = await currentUser();
+    const { blogId, title, description, url, author, category, isPublished } = await req.json();
+
+    // Check if the user is authenticated
+    if (!user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Validate required fields for blog update
+    if (!blogId || !title || !url) {
+      return new NextResponse("Missing required fields", { status: 400 });
+    }
+
+    // Retrieve all blogs associated with the given section
+    const blogs = await db.blog.findMany({
+      where: {
+        sectionId: params.sectionId,
+        section: {
+          chapterId: params.chapterId,
+          chapter: {
+            courseId: params.courseId,
+            course: {
+              userId: user.id, // Ensure the course belongs to the current user
+            },
+          },
+        },
+      },
+    });
+
+    // Find the blog with the specified blogId
+    const blog = blogs.find((blg) => blg.id === blogId);
+
+    // If the blog doesn't exist or doesn't match, return an error
+    if (!blog) {
+      return new NextResponse("Unauthorized or Not Found", { status: 404 });
+    }
+
+    // Update the blog information in the database
+    const updatedBlog = await db.blog.update({
+      where: { id: blogId },
+      data: {
+        title,
+        description: description ?? null, // Accept null for optional fields
+        url,
+        author: author ?? null,
+        category: category ?? null,
+        isPublished: isPublished ?? false,
+      },
+    });
+
+    // Return the updated blog information
+    return new NextResponse(JSON.stringify(updatedBlog), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("[PATCH ERROR] Blog Update:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}
+
+
+
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { courseId: string; chapterId: string; sectionId: string } }
+) {
+  try {
+    const user = await currentUser();
+    const { blogId } = await req.json(); // Extract blogId from the request payload
+
+    if (!user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Fetch all blogs associated with the sectionId
+    const blogs = await db.blog.findMany({
+      where: {
+        sectionId: params.sectionId,
+        section: {
+          chapterId: params.chapterId,
+          chapter: {
+            courseId: params.courseId,
+            course: {
+              userId: user.id, // Ensure the course belongs to the current user
+            },
+          },
+        },
+      },
+    });
+
+    // Find the specific blog to delete by its ID
+    const blogToDelete = blogs.find((blog) => blog.id === blogId);
+
+    if (!blogToDelete) {
+      return new NextResponse("Unauthorized or Not Found", { status: 404 });
+    }
+
+    // Delete the blog
+    const deletedBlog = await db.blog.delete({
+      where: {
+        id: blogToDelete.id,
+      },
+    });
+
+    return NextResponse.json(deletedBlog);
+  } catch (error) {
+    console.error("[DELETE_BLOG_ERROR]", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}
+

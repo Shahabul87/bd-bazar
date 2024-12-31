@@ -1,0 +1,53 @@
+.quill {
+  @apply bg-gray-800 rounded-lg overflow-hidden;
+}
+
+.ql-toolbar.ql-snow {
+  @apply bg-gray-700 border-gray-600 !important;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.ql-container.ql-snow {
+  @apply bg-gray-800 border-gray-600 !important;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  font-family: inherit !important;
+}
+
+.ql-editor {
+  @apply min-h-[200px] text-white !important;
+}
+
+.ql-snow .ql-picker {
+  @apply text-white !important;
+}
+
+.ql-snow .ql-stroke {
+  @apply stroke-white !important;
+}
+
+.ql-snow .ql-fill {
+  @apply fill-white !important;
+}
+
+.ql-snow .ql-picker-options {
+  @apply bg-gray-700 border-gray-600 !important;
+}
+
+.ql-snow .ql-tooltip {
+  @apply bg-gray-700 border-gray-600 text-white !important;
+}
+
+.ql-snow.ql-toolbar button:hover,
+.ql-snow.ql-toolbar button:focus {
+  @apply bg-gray-600 !important;
+}
+
+.ql-snow.ql-toolbar button.ql-active {
+  @apply bg-gray-600 !important;
+}
+
+.ql-snow.ql-toolbar button {
+  @apply rounded transition-colors duration-200 !important;
+} 

@@ -2,10 +2,8 @@ import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { CircleDollarSign, File, LayoutDashboard, ListChecks } from "lucide-react";
-
 import { TitleForm } from "./_components/title-form";
 import { DescriptionForm } from "./_components/description-form";
-import { ImageForm } from "./_components/image-form";
 import { CategoryForm } from "./_components/category-form";
 import { PriceForm } from "./_components/price-form";
 import { AttachmentForm } from "./_components/attachment-form";
@@ -13,11 +11,7 @@ import { ChaptersForm } from "./_components/chapters-form";
 import { Actions } from "./_components/actions";
 import { IconBadge } from "@/components/icon-badge";
 import { Banner } from "@/components/banner";
-import { FileUploadForm } from "./_components/file-upload-form";
-import { Header } from "@/app/(homepage)/header";
-import { HeaderAfterLogin } from "@/app/(homepage)/header-after-login";
 import { SidebarDemo } from "@/components/ui/sidebar-demo";
-import { ImageFormNew } from "./_components/image-upload-form";
 import { ImageFormCombined } from "./_components/image-upload-form-combined";
 import ConditionalHeader from "@/app/(homepage)/user-header";
 

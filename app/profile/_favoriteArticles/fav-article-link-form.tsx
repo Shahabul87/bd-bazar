@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { FavoriteArticle } from "@prisma/client";
-import { FavoriteArticleList } from "./fav-article-link-list"; // Assuming this is a component to list favorite articles
+import { FavoriteArticleList } from "./fav-article-link-list";
 
 import {
   Form,
@@ -37,16 +37,23 @@ export const FavoriteArticleLinkForm = ({
   userId,
   favoriteArticles = [],
 }: FavoriteArticleLinkFormProps) => {
-
-    console.log("favoriteArticles prop:", favoriteArticles); 
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [articleId, setEditingArticleId] = useState<string | null>(null);
 
   const toggleCreating = () => {
     setIsCreating((current) => !current);
+    setEditMode(false);
+    form.reset();
   };
 
-
+  const cancelEditMode = () => {
+    setEditMode(false);
+    setEditingArticleId(null);
+    form.reset();
+  };
 
   const router = useRouter();
 
@@ -61,9 +68,7 @@ export const FavoriteArticleLinkForm = ({
   });
 
   const { isSubmitting, isValid } = form.formState;
-
   const watchedValues = form.watch();
-
   const isFormComplete = !!watchedValues.title && !!watchedValues.platform && !!watchedValues.url;
 
   useEffect(() => {
@@ -73,7 +78,6 @@ export const FavoriteArticleLinkForm = ({
   }, [isFormComplete, isValid, watchedValues]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
     try {
       await axios.post(`/api/users/${userId}/favorite-articles`, values);
       toast.success("Favorite article added");
@@ -81,6 +85,24 @@ export const FavoriteArticleLinkForm = ({
       router.refresh();
     } catch {
       toast.error("Something went wrong");
+    }
+  };
+
+  const onSave = async (values: z.infer<typeof formSchema>) => {
+    if (!articleId) return;
+
+    try {
+      setIsUpdating(true);
+      await axios.patch(`/api/users/${userId}/favorite-articles/${articleId}`, values);
+      toast.success("Favorite article updated");
+      setEditMode(false);
+      setEditingArticleId(null);
+      form.reset();
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -100,7 +122,27 @@ export const FavoriteArticleLinkForm = ({
   };
 
   const onEdit = (id: string) => {
-    router.push(`/user/${userId}/favorite-articles/${id}`);
+    const articleToEdit = favoriteArticles.find((article) => article.id === id);
+    if (articleToEdit) {
+      setEditMode(true);
+      setEditingArticleId(id);
+      form.setValue("title", articleToEdit.title);
+      form.setValue("platform", articleToEdit.platform);
+      form.setValue("url", articleToEdit.url);
+    }
+  };
+
+  const onDelete = async (articleId: string) => {
+    try {
+      setIsLoading(true);
+      await axios.delete(`/api/users/${userId}/favorite-articles/${articleId}`);
+      toast.success("Favorite article deleted");
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -122,9 +164,9 @@ export const FavoriteArticleLinkForm = ({
           )}
         </Button>
       </div>
-      {isCreating && (
+      {(isCreating || editMode) && (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+          <form onSubmit={form.handleSubmit(editMode ? onSave : onSubmit)} className="space-y-4 mt-4">
             <FormField
               control={form.control}
               name="title"
@@ -132,7 +174,7 @@ export const FavoriteArticleLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Article Title (e.g., My Favorite Article)"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -149,7 +191,7 @@ export const FavoriteArticleLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Platform (e.g., Medium)"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -166,7 +208,7 @@ export const FavoriteArticleLinkForm = ({
                 <FormItem>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUpdating}
                       placeholder="Article URL"
                       className="text-cyan-400 font-semibold bg-gray-600"
                       {...field}
@@ -176,13 +218,20 @@ export const FavoriteArticleLinkForm = ({
                 </FormItem>
               )}
             />
-            <Button disabled={!isFormComplete || isSubmitting} type="submit">
-              Create
-            </Button>
+            <div className="flex space-x-2">
+              <Button disabled={!isFormComplete || isSubmitting || isUpdating} type="submit">
+                {editMode ? "Save" : "Create"}
+              </Button>
+              {editMode && (
+                <Button variant="outline" onClick={cancelEditMode} disabled={isSubmitting || isUpdating} className="text-black">
+                  Cancel
+                </Button>
+              )}
+            </div>
           </form>
         </Form>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <div
           className={cn(
             "text-sm mt-2",
@@ -191,11 +240,11 @@ export const FavoriteArticleLinkForm = ({
         >
           {favoriteArticles.length === 0 && "No favorite articles"}
           {favoriteArticles.length > 0 && (
-            <FavoriteArticleList onEdit={onEdit} onReorder={onReorder} items={favoriteArticles} />
+            <FavoriteArticleList onEdit={onEdit} onReorder={onReorder} onDelete={onDelete} items={favoriteArticles} />
           )}
         </div>
       )}
-      {!isCreating && (
+      {!isCreating && !editMode && (
         <p className="text-xs text-white/90 mt-4">
           Drag and drop to reorder favorite articles
         </p>

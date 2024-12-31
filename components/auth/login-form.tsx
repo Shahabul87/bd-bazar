@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { Mail, Phone, Lock, ArrowRight } from "lucide-react";
 
 import { LoginSchema } from "@/schemas";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ export const LoginForm = () => {
     : "";
 
   const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
@@ -54,12 +56,10 @@ export const LoginForm = () => {
             form.reset();
             setError(data.error);
           }
-
           if (data?.success) {
             form.reset();
             setSuccess(data.success);
           }
-
           if (data?.twoFactor) {
             setShowTwoFactor(true);
           }
@@ -74,7 +74,8 @@ export const LoginForm = () => {
       backButtonLabel="Create account"
       backButtonHref="/auth/register"
       showSocial
-      className="bg-gray-700 text-gray-300 border-gray-500 md:w-[550px]"
+      className="w-full bg-white dark:bg-gray-800/95 rounded-2xl shadow-2xl 
+        backdrop-blur-lg border-0 p-6 sm:p-8 transition-all duration-300"
     >
       <Form {...form}>
         <form 
@@ -82,42 +83,83 @@ export const LoginForm = () => {
           className="space-y-6"
         >
           <div className="space-y-4">
-            {showTwoFactor && (
+            {showTwoFactor ? (
               <FormField
                 control={form.control}
                 name="code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Two Factor Code</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        disabled={isPending}
-                        placeholder="123456"
-                         className="border-0 rounded-none border-b border-gray-500 outline-below focus:outline-none focus:border-blue-500 focus-visible:ring-0"
-                      />
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder=""
+                          id="code"
+                          className="pl-10 h-12 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-lg
+                            text-gray-900 dark:text-gray-100 placeholder:text-gray-500
+                            focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                            peer pt-4"
+                        />
+                        <FormLabel 
+                          className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-500 
+                            transition-all duration-200 pointer-events-none
+                            peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-blue-500
+                            peer-[:not(:placeholder-shown)]:-translate-y-4 
+                            peer-[:not(:placeholder-shown)]:scale-75"
+                        >
+                          Two Factor Code
+                        </FormLabel>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
-            {!showTwoFactor && (
+            ) : (
               <>
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          disabled={isPending}
-                          placeholder="sham@example.com"
-                          type="email"
-                          className="border-0 rounded-none border-b border-gray-500 outline-below focus:outline-none focus:border-blue-500 focus-visible:ring-0"
-                        />
+                        <div className="relative mt-2">
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10">
+                            <Mail className="absolute transition-opacity duration-200 
+                              opacity-100 group-focus-within:opacity-0" />
+                            <Phone className="absolute transition-opacity duration-200 
+                              opacity-0 group-focus-within:opacity-100" />
+                          </div>
+                          <Input
+                            {...field}
+                            disabled={isPending}
+                            placeholder=" "
+                            id="email"
+                            className="w-full pl-10 h-14 bg-gray-50 dark:bg-gray-700/50 
+                              border border-gray-200 dark:border-gray-600
+                              rounded-lg text-gray-900 dark:text-gray-100
+                              focus:border-blue-500 dark:focus:border-blue-400
+                              focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20
+                              transition-all duration-200
+                              peer"
+                          />
+                          <FormLabel 
+                            className="absolute left-10 top-4 text-gray-500 
+                              transition-all duration-200 pointer-events-none
+                              peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-sm peer-focus:text-blue-500
+                              peer-focus:bg-white dark:peer-focus:bg-gray-800 peer-focus:px-2
+                              peer-[:not(:placeholder-shown)]:-top-2.5 
+                              peer-[:not(:placeholder-shown)]:left-3
+                              peer-[:not(:placeholder-shown)]:text-sm
+                              peer-[:not(:placeholder-shown)]:bg-white 
+                              dark:peer-[:not(:placeholder-shown)]:bg-gray-800
+                              peer-[:not(:placeholder-shown)]:px-2"
+                          >
+                            Email or Phone Number
+                          </FormLabel>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -128,15 +170,38 @@ export const LoginForm = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          disabled={isPending}
-                          placeholder="******"
-                          type="password"
-                            className="border-0 rounded-none border-b border-gray-500 outline-below focus:outline-none focus:border-blue-500 focus-visible:ring-0"
-                        />
+                        <div className="relative mt-2">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+                          <Input
+                            {...field}
+                            disabled={isPending}
+                            placeholder=" "
+                            type="password"
+                            id="password"
+                            className="w-full pl-10 h-14 bg-gray-50 dark:bg-gray-700/50 
+                              border border-gray-200 dark:border-gray-600
+                              rounded-lg text-gray-900 dark:text-gray-100
+                              focus:border-blue-500 dark:focus:border-blue-400
+                              focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20
+                              transition-all duration-200
+                              peer"
+                          />
+                          <FormLabel 
+                            className="absolute left-10 top-4 text-gray-500 
+                              transition-all duration-200 pointer-events-none
+                              peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-sm peer-focus:text-blue-500
+                              peer-focus:bg-white dark:peer-focus:bg-gray-800 peer-focus:px-2
+                              peer-[:not(:placeholder-shown)]:-top-2.5 
+                              peer-[:not(:placeholder-shown)]:left-3
+                              peer-[:not(:placeholder-shown)]:text-sm
+                              peer-[:not(:placeholder-shown)]:bg-white 
+                              dark:peer-[:not(:placeholder-shown)]:bg-gray-800
+                              peer-[:not(:placeholder-shown)]:px-2"
+                          >
+                            Password
+                          </FormLabel>
+                        </div>
                       </FormControl>
                       <Button
                         size="sm"
@@ -144,7 +209,11 @@ export const LoginForm = () => {
                         asChild
                         className="px-0 font-normal"
                       >
-                        <Link href="/auth/reset" className="text-white/70 text-base md:text-md tracking-wide">
+                        <Link 
+                          href="/auth/reset"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-500
+                            text-sm font-medium"
+                        >
                           Forgot password?
                         </Link>
                       </Button>
@@ -152,17 +221,36 @@ export const LoginForm = () => {
                     </FormItem>
                   )}
                 />
-            </>
-          )}
+              </>
+            )}
           </div>
           <FormError message={error || urlError} />
           <FormSuccess message={success} />
           <Button
             disabled={isPending}
             type="submit"
-            className="w-full bg-cyan-700 hover:bg-blue-500"
+            className="w-full h-12 relative group
+              bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+              dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400
+              text-white rounded-lg font-medium
+              overflow-hidden transition-all duration-300
+              hover:scale-[1.02] hover:shadow-lg
+              disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center justify-center gap-2"
           >
-            {showTwoFactor ? "Confirm" : "Login"}
+            <span className="relative z-10 font-semibold tracking-wide">
+              {showTwoFactor ? "Confirm" : "Sign In"}
+            </span>
+            <ArrowRight className="h-5 w-5 relative z-10 
+              group-hover:translate-x-1 transition-transform" />
+            
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600
+              dark:from-indigo-500 dark:via-purple-500 dark:to-pink-500
+              opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent 
+              via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] 
+              transition-transform duration-1000" />
           </Button>
         </form>
       </Form>

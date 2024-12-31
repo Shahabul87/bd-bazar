@@ -43,7 +43,8 @@ export const getCoursesForHomepage = async (
         description: true,
         imageUrl: true,
         price:true,
-        category: {
+        categoryId: true,
+        Category: {
           select: {
             id: true,
             name: true,
@@ -58,7 +59,7 @@ export const getCoursesForHomepage = async (
     // Cast the result to the CourseForHomepage type to ensure type correctness
     return courses as CourseForHomepage[];
   } catch (error) {
-    console.log("[GET_COURSES_FOR_HOMEPAGE]", error);
+    console.error("[GET_COURSES_FOR_HOMEPAGE]", error instanceof Error ? error.message : 'An unknown error occurred');
     return [];
   }
 }

@@ -46,4 +46,13 @@ export const publicRoutes: string[] = [
    * The default redirect path after logging in
    * @type {string}
    */
-  export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
+  export const DEFAULT_LOGIN_REDIRECT: string = "/admindashboard";
+  
+  /**
+   * An array of routes that are protected
+   * These routes require authentication
+   * @type {string[]}
+   */
+  export const protectedRoutes: string[] = [
+    "/admindashboard/store/products/new",
+  ];
