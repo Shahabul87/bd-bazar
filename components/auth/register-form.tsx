@@ -4,7 +4,7 @@ import * as z from "zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User, Mail, Lock, ArrowRight, Phone } from "lucide-react";
+import { User, Mail, Lock, ArrowRight, Phone, Globe } from "lucide-react";
 
 import { RegisterSchema } from "@/schemas";
 import { Input } from "@/components/ui/input";
@@ -21,12 +21,14 @@ import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { register } from "@/actions/register";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export const RegisterForm = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
+  const { language, setLanguage } = useLanguage();
 
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
@@ -50,15 +52,35 @@ export const RegisterForm = () => {
     });
   };
 
+  // Language-specific labels
+  const labels = {
+    createAccount: language === 'en' ? 'Create an account' : 'একটি অ্যাকাউন্ট তৈরি করুন',
+    alreadyHaveAccount: language === 'en' ? 'Already have an account?' : 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
+    fullName: language === 'en' ? 'Full Name' : 'পুরো নাম',
+    emailOrPhone: language === 'en' ? 'Email or Phone Number' : 'ইমেল বা ফোন নম্বর',
+    password: language === 'en' ? 'Password' : 'পাসওয়ার্ড',
+    createAccountButton: language === 'en' ? 'Create Account' : 'অ্যাকাউন্ট তৈরি করুন',
+  };
+
   return (
     <CardWrapper
-      headerLabel="Create an account"
-      backButtonLabel="Already have an account?"
+      headerLabel={labels.createAccount}
+      backButtonLabel={labels.alreadyHaveAccount}
       backButtonHref="/auth/login"
       showSocial
       className="w-full bg-white dark:bg-gray-800/95 rounded-2xl shadow-2xl 
         backdrop-blur-lg border-0 p-6 sm:p-8 transition-all duration-300"
     >
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={() => setLanguage(language === 'en' ? 'bn' : 'en')}
+        className="absolute top-4 right-4 p-2 h-10 rounded-full flex items-center justify-center gap-2"
+      >
+        <Globe className="h-4 w-4" />
+        <span>{language === 'en' ? '🇺🇸' : '🇧🇩'}</span>
+      </Button>
+
       <Form {...form}>
         <form 
           onSubmit={form.handleSubmit(onSubmit)}
@@ -99,7 +121,7 @@ export const RegisterForm = () => {
                           dark:peer-[:not(:placeholder-shown)]:bg-gray-800
                           peer-[:not(:placeholder-shown)]:px-2"
                       >
-                        Full Name
+                        {labels.fullName}
                       </FormLabel>
                     </div>
                   </FormControl>
@@ -154,7 +176,7 @@ export const RegisterForm = () => {
                           dark:peer-[:not(:placeholder-shown)]:bg-gray-800
                           peer-[:not(:placeholder-shown)]:px-2"
                       >
-                        Email or Phone Number
+                        {labels.emailOrPhone}
                       </FormLabel>
                     </div>
                   </FormControl>
@@ -198,7 +220,7 @@ export const RegisterForm = () => {
                           dark:peer-[:not(:placeholder-shown)]:bg-gray-800
                           peer-[:not(:placeholder-shown)]:px-2"
                       >
-                        Password
+                        {labels.password}
                       </FormLabel>
                     </div>
                   </FormControl>
@@ -222,7 +244,7 @@ export const RegisterForm = () => {
               flex items-center justify-center gap-2"
           >
             <span className="relative z-10 font-semibold tracking-wide">
-              Create Account
+              {labels.createAccountButton}
             </span>
             <ArrowRight className="h-5 w-5 relative z-10 
               group-hover:translate-x-1 transition-transform" />

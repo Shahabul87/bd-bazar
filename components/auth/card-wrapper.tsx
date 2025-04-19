@@ -15,11 +15,13 @@ import { signIn } from "next-auth/react";
 
 interface CardWrapperProps {
   children: React.ReactNode;
-  headerLabel: string;
-  backButtonLabel: string;
+  headerLabel: React.ReactNode;
+  backButtonLabel: React.ReactNode;
   backButtonHref: string;
   showSocial?: boolean;
   className?: string;
+  headerClassName?: string;
+  hideVerticalDivider?: boolean;
 };
 
 export const CardWrapper = ({
@@ -28,14 +30,16 @@ export const CardWrapper = ({
   backButtonLabel,
   backButtonHref,
   showSocial,
-  className
+  className,
+  headerClassName,
+  hideVerticalDivider = false
 }: CardWrapperProps) => {
   return (
     <Card className={clsx("shadow-sm w-full max-w-3xl", className)}>
       <CardHeader className="pb-8">
         <Header 
           label={headerLabel} 
-          className="text-4xl md:text-5xl font-bold tracking-tight"
+          className={clsx("text-4xl md:text-5xl font-bold tracking-tight", headerClassName)}
         />
       </CardHeader>
       <CardContent>
@@ -46,9 +50,11 @@ export const CardWrapper = ({
           </div>
 
           {/* Vertical Gradient Divider - Only visible on md and up */}
-          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px">
-            <div className="h-full w-px bg-gradient-to-b from-transparent via-gray-300 dark:via-gray-600 to-transparent" />
-          </div>
+          {!hideVerticalDivider && (
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px">
+              <div className="h-full w-px bg-gradient-to-b from-transparent via-gray-300 dark:via-gray-600 to-transparent" />
+            </div>
+          )}
 
           {/* Right side - Social Login */}
           {showSocial && (

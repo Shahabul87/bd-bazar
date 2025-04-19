@@ -2,11 +2,11 @@
 
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { Mail, Phone, Lock, ArrowRight } from "lucide-react";
+import { Mail, Phone, Lock, ArrowRight, Globe } from "lucide-react";
 
 import { LoginSchema } from "@/schemas";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { login } from "@/actions/login";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export const LoginForm = () => {
   const searchParams = useSearchParams();
@@ -36,6 +37,7 @@ export const LoginForm = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+  const { language, setLanguage, t } = useLanguage();
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -68,15 +70,40 @@ export const LoginForm = () => {
     });
   };
 
+  const labels = {
+    welcomeBack: language === 'en' ? 'Welcome back' : 'স্বাগতম',
+    createAccount: language === 'en' ? 'Create account' : 'অ্যাকাউন্ট তৈরি করুন',
+    emailOrPhone: language === 'en' ? 'Email or Phone' : 'ইমেইল বা ফোন',
+    password: language === 'en' ? 'Password' : 'পাসওয়ার্ড',
+    forgotPassword: language === 'en' ? 'Forgot password?' : 'পাসওয়ার্ড ভুলে গেছেন?',
+    twoFactorCode: language === 'en' ? 'Two Factor Code' : 'টু-ফ্যাক্টর কোড',
+    signIn: language === 'en' ? 'Sign In' : 'সাইন ইন',
+    confirm: language === 'en' ? 'Confirm' : 'নিশ্চিত করুন',
+    currentLanguage: language === 'en' ? '🇺🇸' : '🇧🇩',
+  };
+
   return (
     <CardWrapper
-      headerLabel="Welcome back"
-      backButtonLabel="Create account"
+      headerLabel={labels.welcomeBack}
+      backButtonLabel={labels.createAccount}
       backButtonHref="/auth/register"
       showSocial
-      className="w-full bg-white dark:bg-gray-800/95 rounded-2xl shadow-2xl 
-        backdrop-blur-lg border-0 p-6 sm:p-8 transition-all duration-300"
+      className="w-full backdrop-blur-lg p-6 sm:p-8 transition-all duration-300
+        bg-slate-800/40 dark:bg-gray-900/40 rounded-2xl shadow-2xl
+        border border-gray-700/20"
     >
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={() => setLanguage(language === 'en' ? 'bn' : 'en')}
+        className="absolute top-4 right-4 p-2 h-10 rounded-full flex items-center justify-center gap-2
+          bg-slate-700/30 dark:bg-gray-800/30 hover:bg-slate-700/50 dark:hover:bg-gray-800/50
+          border border-gray-600/30"
+      >
+        <Globe className="h-4 w-4 text-gray-300" />
+        <span className="text-gray-300">{labels.currentLanguage}</span>
+      </Button>
+
       <Form {...form}>
         <form 
           onSubmit={form.handleSubmit(onSubmit)}
@@ -97,19 +124,20 @@ export const LoginForm = () => {
                           disabled={isPending}
                           placeholder=""
                           id="code"
-                          className="pl-10 h-12 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-lg
-                            text-gray-900 dark:text-gray-100 placeholder:text-gray-500
-                            focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                          className="pl-10 h-12 bg-slate-700/30 dark:bg-gray-800/30 border-0 rounded-lg
+                            text-white placeholder:text-gray-500
+                            focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500
+                            border border-gray-600/30
                             peer pt-4"
                         />
                         <FormLabel 
-                          className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-500 
+                          className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-400
                             transition-all duration-200 pointer-events-none
-                            peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-blue-500
+                            peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-gray-300
                             peer-[:not(:placeholder-shown)]:-translate-y-4 
                             peer-[:not(:placeholder-shown)]:scale-75"
                         >
-                          Two Factor Code
+                          {labels.twoFactorCode}
                         </FormLabel>
                       </div>
                     </FormControl>
@@ -125,7 +153,7 @@ export const LoginForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <div className="relative mt-2">
+                        <div className="relative mt-2 group">
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10">
                             <Mail className="absolute transition-opacity duration-200 
                               opacity-100 group-focus-within:opacity-0" />
@@ -137,27 +165,27 @@ export const LoginForm = () => {
                             disabled={isPending}
                             placeholder=" "
                             id="email"
-                            className="w-full pl-10 h-14 bg-gray-50 dark:bg-gray-700/50 
-                              border border-gray-200 dark:border-gray-600
-                              rounded-lg text-gray-900 dark:text-gray-100
-                              focus:border-blue-500 dark:focus:border-blue-400
-                              focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20
+                            className="w-full pl-10 h-14 bg-slate-700/30 dark:bg-gray-800/30
+                              border border-gray-600/30
+                              rounded-lg text-white
+                              focus:border-gray-400 dark:focus:border-gray-500
+                              focus:ring-2 focus:ring-gray-400/20 dark:focus:ring-gray-500/20
                               transition-all duration-200
                               peer"
                           />
                           <FormLabel 
-                            className="absolute left-10 top-4 text-gray-500 
+                            className="absolute left-10 top-4 text-gray-400
                               transition-all duration-200 pointer-events-none
-                              peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-sm peer-focus:text-blue-500
-                              peer-focus:bg-white dark:peer-focus:bg-gray-800 peer-focus:px-2
+                              peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-sm peer-focus:text-gray-300
+                              peer-focus:bg-slate-700/30 dark:peer-focus:bg-gray-800/30 peer-focus:px-2
                               peer-[:not(:placeholder-shown)]:-top-2.5 
                               peer-[:not(:placeholder-shown)]:left-3
                               peer-[:not(:placeholder-shown)]:text-sm
-                              peer-[:not(:placeholder-shown)]:bg-white 
-                              dark:peer-[:not(:placeholder-shown)]:bg-gray-800
+                              peer-[:not(:placeholder-shown)]:bg-slate-700/30 
+                              dark:peer-[:not(:placeholder-shown)]:bg-gray-800/30
                               peer-[:not(:placeholder-shown)]:px-2"
                           >
-                            Email or Phone Number
+                            {labels.emailOrPhone}
                           </FormLabel>
                         </div>
                       </FormControl>
@@ -179,27 +207,27 @@ export const LoginForm = () => {
                             placeholder=" "
                             type="password"
                             id="password"
-                            className="w-full pl-10 h-14 bg-gray-50 dark:bg-gray-700/50 
-                              border border-gray-200 dark:border-gray-600
-                              rounded-lg text-gray-900 dark:text-gray-100
-                              focus:border-blue-500 dark:focus:border-blue-400
-                              focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20
+                            className="w-full pl-10 h-14 bg-slate-700/30 dark:bg-gray-800/30
+                              border border-gray-600/30
+                              rounded-lg text-white
+                              focus:border-gray-400 dark:focus:border-gray-500
+                              focus:ring-2 focus:ring-gray-400/20 dark:focus:ring-gray-500/20
                               transition-all duration-200
                               peer"
                           />
                           <FormLabel 
-                            className="absolute left-10 top-4 text-gray-500 
+                            className="absolute left-10 top-4 text-gray-400
                               transition-all duration-200 pointer-events-none
-                              peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-sm peer-focus:text-blue-500
-                              peer-focus:bg-white dark:peer-focus:bg-gray-800 peer-focus:px-2
+                              peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-sm peer-focus:text-gray-300
+                              peer-focus:bg-slate-700/30 dark:peer-focus:bg-gray-800/30 peer-focus:px-2
                               peer-[:not(:placeholder-shown)]:-top-2.5 
                               peer-[:not(:placeholder-shown)]:left-3
                               peer-[:not(:placeholder-shown)]:text-sm
-                              peer-[:not(:placeholder-shown)]:bg-white 
-                              dark:peer-[:not(:placeholder-shown)]:bg-gray-800
+                              peer-[:not(:placeholder-shown)]:bg-slate-700/30 
+                              dark:peer-[:not(:placeholder-shown)]:bg-gray-800/30
                               peer-[:not(:placeholder-shown)]:px-2"
                           >
-                            Password
+                            {labels.password}
                           </FormLabel>
                         </div>
                       </FormControl>
@@ -211,10 +239,10 @@ export const LoginForm = () => {
                       >
                         <Link 
                           href="/auth/reset"
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-500
+                          className="text-gray-300 hover:text-white
                             text-sm font-medium"
                         >
-                          Forgot password?
+                          {labels.forgotPassword}
                         </Link>
                       </Button>
                       <FormMessage />
@@ -230,8 +258,8 @@ export const LoginForm = () => {
             disabled={isPending}
             type="submit"
             className="w-full h-12 relative group
-              bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
-              dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400
+              bg-gradient-to-r from-slate-700 to-gray-800
+              dark:from-slate-800 dark:to-gray-900
               text-white rounded-lg font-medium
               overflow-hidden transition-all duration-300
               hover:scale-[1.02] hover:shadow-lg
@@ -239,17 +267,17 @@ export const LoginForm = () => {
               flex items-center justify-center gap-2"
           >
             <span className="relative z-10 font-semibold tracking-wide">
-              {showTwoFactor ? "Confirm" : "Sign In"}
+              {showTwoFactor ? labels.confirm : labels.signIn}
             </span>
             <ArrowRight className="h-5 w-5 relative z-10 
               group-hover:translate-x-1 transition-transform" />
             
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600
-              dark:from-indigo-500 dark:via-purple-500 dark:to-pink-500
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-800 to-gray-900
+              dark:from-slate-900 dark:to-black
               opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <div className="absolute inset-0 bg-gradient-to-r from-transparent 
-              via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] 
+              via-white/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] 
               transition-transform duration-1000" />
           </Button>
         </form>

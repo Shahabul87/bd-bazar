@@ -7,7 +7,7 @@ import clsx from "clsx";
 
 interface BackButtonProps {
   href: string;
-  label: string;
+  label: React.ReactNode;
   className?: string;
 }
 

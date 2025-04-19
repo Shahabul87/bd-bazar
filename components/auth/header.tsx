@@ -9,7 +9,7 @@ const poppins = Poppins({
 });
 
 interface HeaderProps {
-  label: string;
+  label: React.ReactNode;
   className?: string;
 }
 

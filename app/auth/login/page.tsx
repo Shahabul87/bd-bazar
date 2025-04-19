@@ -1,21 +1,8 @@
-import { Footer } from "@/app/(homepage)/footer";
-import { Header } from "@/app/(homepage)/header";
 import { LoginForm } from "@/components/auth/login-form";
-
+import { LoginPageClient } from "./_components/login-client";
 
 const LoginPage = () => {
-  return   <>
-  
- 
-      <Header />
-      <div className="mt-20 flex items-center justify-center">
-          <LoginForm />
-      </div>
-      
-      
-    
-   
-  </>
+  return <LoginPageClient />;
 }
  
 export default LoginPage;
