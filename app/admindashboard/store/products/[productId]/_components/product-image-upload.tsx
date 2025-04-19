@@ -3,7 +3,7 @@
 import * as z from "zod";
 import axios from "axios";
 import { Pencil, PlusCircle, ImageIcon } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Product } from "@prisma/client";
@@ -58,7 +58,7 @@ export const ProductImageUpload = ({ initialData, productId }: ProductImageUploa
   }, [uploadResponse]);
 
   // Function to fetch images
-  const fetchImages = async () => {
+  const fetchImages = useCallback(async () => {
     try {
       const response = await axios.get(`/api/products/${productId}/images`);
       setUploadedImages(response.data);
@@ -66,12 +66,12 @@ export const ProductImageUpload = ({ initialData, productId }: ProductImageUploa
       console.error("Failed to fetch product images:", error);
       toast.error("Failed to load product images");
     }
-  };
+  }, [productId]); // Only depends on productId
 
-  // Fetch images on mount and when productId changes
+  // Fetch images on mount and when productId or fetchImages changes
   useEffect(() => {
     fetchImages();
-  }, [productId]);
+  }, [fetchImages]);
 
   // Handle file selection
   const handleFileUpload = (uploadedFiles: File[]) => {

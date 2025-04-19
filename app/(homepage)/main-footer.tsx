@@ -1,89 +1,144 @@
-"use client"; // Add this if using Next.js 13+ for interactive elements like theme toggle
-
-import { useState } from "react";
-import { Moon, Sun, Monitor, Heart } from "lucide-react"; // Assuming you use Lucide for icons
+import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
 
 export const MainFooter = () => {
-  const [theme, setTheme] = useState("light");
-
-  // Function to toggle theme (can integrate with Tailwind dark mode)
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
-  };
-
+  const currentYear = new Date().getFullYear();
+  
   return (
-    <footer className="bg-gray-800 text-gray-400 py-10">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
-        {/* Products Section */}
-        <div>
-          <h3 className="font-semibold mb-4 text-white">Our Products</h3>
-          <ul className="space-y-2">
-            <li><Link href="#">Admin Panel Template</Link></li>
-            <li><Link href="#">5664 Open Source Icons</Link></li>
-            <li><Link href="#">Email Templates</Link></li>
-            <li><Link href="#">SVG Illustrations</Link></li>
-            <li><Link href="#">Avatars</Link></li>
-          </ul>
-        </div>
-
-        {/* Support Section */}
-        <div>
-          <h3 className="font-semibold mb-4 text-white">Support</h3>
-          <ul className="space-y-2">
-            <li><Link href="#">Blog</Link></li>
-            <li><Link href="#">Documentation</Link></li>
-            <li><Link href="#">Repositories</Link></li>
-            <li><Link href="#">Support</Link></li>
-            <li><Link href="#">Guides</Link></li>
-            <li><Link href="#">Status</Link></li>
-            <li><Link href="#">License</Link></li>
-          </ul>
-        </div>
-
-        {/* Tabler Section */}
-        <div>
-          <h3 className="font-semibold mb-4 text-white">Tabler</h3>
-          <ul className="space-y-2">
-            <li><Link href="#">About</Link></li>
-            <li><Link href="#">Testimonials</Link></li>
-            <li><Link href="#">FAQ</Link></li>
-            <li><Link href="#">Changelog</Link></li>
-            <li><Link href="#">Releases</Link></li>
-            <li><Link href="#">Github</Link></li>
-          </ul>
-        </div>
-
-        {/* Tabler Info and Social Links */}
-        <div className="flex flex-col">
-          <div className="mb-4">
-            <h3 className="font-semibold text-white">Tabler</h3>
-            <p className="text-gray-400 mt-2">
-              Tabler comes with tons of well-designed components and features. Start your adventure with Tabler and make your dashboard great again. For free!
+    <footer className="bg-gray-900 text-gray-300 mt-10">
+      {/* Main Footer Content */}
+      <div className="max-w-[2000px] mx-auto py-16 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* Company Info */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-white">IraEcommerce</h2>
+            <p className="text-gray-400 leading-relaxed">
+              Your premier destination for quality products. We bring the best deals and unique items right to your doorstep.
             </p>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Bottom section */}
-      <div className="border-t border-gray-700 mt-10 pt-6">
-        <div className="container mx-auto flex justify-between items-center">
-          {/* Theme Toggle */}
-          <div className="flex items-center space-x-4">
-            <Monitor className="w-5 h-5 text-gray-400" />
-            <div onClick={toggleTheme} className="cursor-pointer">
-              {theme === "light" ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-400" />}
+            <div className="flex space-x-4">
+              <Link href="#" className="text-gray-400 hover:text-blue-500 transition">
+                <Facebook className="h-5 w-5" />
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-pink-500 transition">
+                <Instagram className="h-5 w-5" />
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-blue-400 transition">
+                <Twitter className="h-5 w-5" />
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-red-500 transition">
+                <Youtube className="h-5 w-5" />
+              </Link>
             </div>
           </div>
 
-          {/* Copyright */}
-          <p className="text-gray-400">©codecalm.net - Terms of service · Privacy policy</p>
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Quick Links</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link href="/products" className="text-gray-400 hover:text-blue-400 transition">
+                  All Products
+                </Link>
+              </li>
+              <li>
+                <Link href="/featured" className="text-gray-400 hover:text-blue-400 transition">
+                  Featured Items
+                </Link>
+              </li>
+              <li>
+                <Link href="/new-arrivals" className="text-gray-400 hover:text-blue-400 transition">
+                  New Arrivals
+                </Link>
+              </li>
+              <li>
+                <Link href="/deals" className="text-gray-400 hover:text-blue-400 transition">
+                  Special Deals
+                </Link>
+              </li>
+              <li>
+                <Link href="/stores" className="text-gray-400 hover:text-blue-400 transition">
+                  Browse Stores
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-          {/* "Made with Love" */}
-          <p className="text-gray-400 flex items-center">
-            Made with <Heart className="mx-1 text-red-600" /> in Poland.
-          </p>
+          {/* Customer Service */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Customer Service</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link href="/contact" className="text-gray-400 hover:text-blue-400 transition">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/shipping" className="text-gray-400 hover:text-blue-400 transition">
+                  Shipping Information
+                </Link>
+              </li>
+              <li>
+                <Link href="/returns" className="text-gray-400 hover:text-blue-400 transition">
+                  Returns & Exchanges
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-gray-400 hover:text-blue-400 transition">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link href="/track-order" className="text-gray-400 hover:text-blue-400 transition">
+                  Track Your Order
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Contact Us</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <MapPin className="w-5 h-5 text-blue-400 mt-0.5" />
+                <span className="text-gray-400">
+                  123 Commerce Street,<br />
+                  Shopping District,<br />
+                  City, Country
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Phone className="w-5 h-5 text-blue-400" />
+                <span className="text-gray-400">+1 234 567 8900</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Mail className="w-5 h-5 text-blue-400" />
+                <span className="text-gray-400">support@iraecommerce.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-gray-800">
+        <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="md:flex md:items-center md:justify-between">
+            <div className="text-sm text-gray-400">
+              © {currentYear} IraEcommerce. All rights reserved.
+            </div>
+            <div className="mt-4 md:mt-0 flex flex-wrap gap-4 text-sm text-gray-400">
+              <Link href="/privacy" className="hover:text-blue-400 transition">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="hover:text-blue-400 transition">
+                Terms of Service
+              </Link>
+              <Link href="/cookies" className="hover:text-blue-400 transition">
+                Cookie Policy
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

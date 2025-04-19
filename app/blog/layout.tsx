@@ -1,4 +1,3 @@
-
 import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/auth'
 import { Toaster } from "@/components/ui/sonner";
@@ -21,7 +20,11 @@ export default async function BlogLayout({
  
 
   return (
-   <SessionProvider session={session}>
+   <SessionProvider 
+     session={session}
+     refetchInterval={0} 
+     refetchOnWindowFocus={false}
+   >
     {!user ? <Header /> : <HeaderAfterLogin />}
       <div className="relative min-h-screen w-screen">
         <div className="antialiased bg-gray-800 text-zinc-300 font-body min-h-screen">

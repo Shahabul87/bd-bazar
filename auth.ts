@@ -88,5 +88,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut, update,} = NextAu
   },
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },
+  trustHost: true,
+  basePath: "/api/auth",
   ...authConfig,
 });

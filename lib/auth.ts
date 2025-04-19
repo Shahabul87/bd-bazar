@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { verifyPassword } from "./passwordUtils";
 
 export const currentUser = async () => {
   const session = await auth();
@@ -11,3 +12,6 @@ export const currentRole = async () => {
 
   return session?.user?.role;
 };
+
+// Export verifyPassword from passwordUtils for backward compatibility
+export { verifyPassword };

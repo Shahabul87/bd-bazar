@@ -77,6 +77,14 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  // Add explicit check for _next/static and _next/image routes
+  const isNextStaticRoute = nextUrl.pathname.startsWith('/_next/static') || 
+                           nextUrl.pathname.startsWith('/_next/image');
+  
+  if (isNextStaticRoute) {
+    return null;
+  }
+  
   const isPublicRoute = publicRoutes.some(route => {
     // Convert route to regex pattern
     const pattern = new RegExp(`^${route.replace(/\[.*?\]/g, '[^/]+')}$`);
@@ -84,6 +92,7 @@ export default auth((req) => {
   });
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
+  // Special handling for API routes
   if (isApiAuthRoute) {
     return null;
   }
@@ -112,6 +121,10 @@ export default auth((req) => {
   return null;
 })
 
+// Update the matcher to exclude static files and images
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)',
+    '/',
+  ],
 }

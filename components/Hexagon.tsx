@@ -15,7 +15,7 @@ export const Hexagon = (props: ComponentPropsWithoutRef<"svg"> & {size?:number; 
         if (!pathLength) return;
         const scaledPathLength = (pathLength * size) / 82;
         setTotalPathLength(scaledPathLength)
-    }, [])
+    }, [size])
 
     return (
         <div className="inline-flex relative">

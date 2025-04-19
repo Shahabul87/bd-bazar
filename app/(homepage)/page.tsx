@@ -1,49 +1,34 @@
-import { Categories } from "../(protected)/search/_components/categories";
-import { CourseCardHome } from "@/components/course-card-home";
-import { Header } from "./header";
-import { HeaderAfterLogin } from "./header-after-login";
-import { currentUser } from '@/lib/auth';
-import { MainFooter } from "./main-footer";
+import { getLatestProducts, getTrendingProducts, getProductCount, getStoreCount } from "@/actions/get-all-products"
+import { HeroSection } from "./_components/hero-section"
+import { StatsSection } from "./_components/stats-section"
+import { LatestProducts } from "./_components/latest-products"
+import { TrendingProducts } from "./_components/trending-products"
+import { HeaderAfterLogin } from "./header-after-login"
+import { MainFooter } from "./main-footer"
+import { LanguageProvider } from '@/app/context/LanguageContext'
 
-const Home = async () => {
-  const user = await currentUser();
+export default async function HomePage() {
+  // Fetch all required data
+  const [products, trendingProducts, totalProducts, totalStores] = await Promise.all([
+    getLatestProducts(),
+    getTrendingProducts(),
+    getProductCount(),
+    getStoreCount()
+  ]);
 
   return (
-    <>
-      {/* Header Section */}
-      {!user ? <Header /> : <HeaderAfterLogin />}
-
-      {/* Main Content */}
-      <main className="min-h-screen">
-        {/* Categories Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-center mb-8 text-gray-100">
-              Course Categories
-            </h2>
-            <Categories items={[]} />
-          </div>
-        </section>
-
-        {/* Courses Section */}
-        <section className="py-12 bg-gray-900/50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-center mb-8 text-gray-100">
-              Featured Courses
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <p className="text-center col-span-full text-gray-400">
-                No courses found
-              </p>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <MainFooter />
-    </>
-  );
-};
-
-export default Home;
+    <LanguageProvider>
+      <div className="flex flex-col min-h-screen bg-gray-950">
+        <HeaderAfterLogin />
+        <HeroSection />
+        <StatsSection 
+          totalProducts={totalProducts}
+          totalStores={totalStores}
+          trendingCount={trendingProducts.length}
+        />
+        <LatestProducts products={products} />
+        <TrendingProducts products={trendingProducts} />
+      </div>
+    </LanguageProvider>
+  )
+}

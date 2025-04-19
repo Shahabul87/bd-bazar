@@ -38,12 +38,17 @@ export const SearchInput = ({
   }, [externalValue])
 
   // Debounced onChange handler
-  const debouncedOnChange = useCallback(
-    debounce((value: string) => {
-      onChange(value)
-    }, debounceMs),
-    [onChange, debounceMs]
-  )
+  const debouncedOnChange = useCallback((value: string) => {
+    const handler = debounce((searchValue: string) => {
+      onChange(searchValue)
+    }, debounceMs)
+    
+    handler(value)
+    
+    return () => {
+      handler.cancel()
+    }
+  }, [onChange, debounceMs])
 
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

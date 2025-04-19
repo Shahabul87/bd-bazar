@@ -74,10 +74,10 @@ const menuItems: MenuItem[] = [
     href: "/admindashboard/orders",
     badge: 5,
     submenu: [
-      { title: "All Orders", href: "/admindashboard/orders/all" },
-      { title: "Pending", href: "/admindashboard/orders/pending", badge: 3 },
-      { title: "Completed", href: "/admindashboard/orders/completed" },
-      { title: "Cancelled", href: "/admindashboard/orders/cancelled" }
+      { title: "All Orders", href: "/admindashboard/orders/all", icon: Package },
+      { title: "Pending", href: "/admindashboard/orders/pending", badge: 3, icon: Package },
+      { title: "Completed", href: "/admindashboard/orders/completed", icon: Package },
+      { title: "Cancelled", href: "/admindashboard/orders/cancelled", icon: Package }
     ]
   },
   {
@@ -85,9 +85,9 @@ const menuItems: MenuItem[] = [
     icon: Truck,
     href: "/admindashboard/delivery",
     submenu: [
-      { title: "Tracking", href: "/admindashboard/delivery" },
-      { title: "Arrangements", href: "/admindashboard/delivery/arrangements" },
-      { title: "Bulk Shipping", href: "/admindashboard/delivery/bulk-shipping" }
+      { title: "Tracking", href: "/admindashboard/delivery", icon: Truck },
+      { title: "Arrangements", href: "/admindashboard/delivery/arrangements", icon: Truck },
+      { title: "Bulk Shipping", href: "/admindashboard/delivery/bulk-shipping", icon: Truck }
     ]
   },
   {
@@ -111,9 +111,10 @@ const menuItems: MenuItem[] = [
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  className?: string;
 }
 
-export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
+export const Sidebar = ({ isOpen, onToggle, className = "" }: SidebarProps) => {
   const pathname = usePathname()
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
 
@@ -122,26 +123,21 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   }
 
   return (
-    <>
-      {/* Toggle Button */}
-      <div className="">
+    <div className={`${className} ...other-classes`}>
+      {/* Mobile Toggle Button - Only show on small screens */}
       <button
         onClick={onToggle}
-        className="fixed top-20 left-4 z-50 p-2 bg-gray-900 rounded-lg text-gray-400 
+        className="lg:hidden fixed top-20 left-4 z-50 p-2 bg-gray-900 rounded-lg text-gray-400 
           hover:text-white hover:bg-gray-800 transition-colors"
       >
-        {isOpen ? (
-          <X className="h-5 w-5" />
-        ) : (
-          <MenuIcon className="h-5 w-5" />
-        )}
+        {isOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
       </button>
 
       {/* Sidebar */}
       <div className={`
         fixed top-16 left-0 h-[calc(100vh-4rem)] transition-all duration-300
         border-r border-gray-700 bg-gray-900 flex flex-col overflow-y-auto
-        ${isOpen ? 'w-64' : 'w-0'}
+        ${isOpen ? 'w-64' : 'w-0 lg:w-16'}
       `}>
         <div className="flex-1 px-3 py-2 mt-20">
           <nav className="space-y-1">
@@ -208,7 +204,6 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           </nav>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   )
 } 

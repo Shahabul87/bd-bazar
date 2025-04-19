@@ -1,77 +1,118 @@
-import { currentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { db } from "@/lib/db"
 
 export async function PATCH(
   req: Request,
   { params }: { params: { productId: string } }
 ) {
   try {
-    const { productId } = params;
-    const body = await req.json();
+    const session = await auth();
+    if (!session?.user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
 
-    if (!body?.images || !Array.isArray(body.images)) {
-      return NextResponse.json(
-        { error: "Invalid request body" },
+    const { productId } = params;
+    
+    if (!productId) {
+      return new NextResponse("Product ID is required", { status: 400 });
+    }
+
+    const body = await req.json();
+    
+    if (!body || !body.images) {
+      return new NextResponse(
+        JSON.stringify({ error: "Images are required" }), 
         { status: 400 }
       );
     }
 
-    const images = await Promise.all(
-      body.images.map((image: { url: string; publicId: string }) =>
-        db.productImage.create({
-          data: {
-            url: image.url,
-            publicId: image.publicId,
-            productId: productId,
-            alt: `Product image`,
-            order: 0
-          },
-        })
-      )
-    );
+    const existingProduct = await db.product.findUnique({
+      where: {
+        id: productId,
+      }
+    });
 
-    return NextResponse.json(images);
+    if (!existingProduct) {
+      return new NextResponse(
+        JSON.stringify({ error: "Product not found" }), 
+        { status: 404 }
+      );
+    }
+
+    const updatedProduct = await db.product.update({
+      where: {
+        id: productId
+      },
+      data: {
+        images: body.images
+      }
+    });
+
+    return NextResponse.json(updatedProduct);
+
   } catch (error) {
     console.error("[PRODUCT_IMAGES_PATCH]", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return new NextResponse(
+      JSON.stringify({
+        error: "Failed to update product images",
+        details: error instanceof Error ? error.message : "Unknown error"
+      }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
   }
 }
 
 export async function GET(
   req: Request,
-  context: { params: { productId: string } }
+  { params }: { params: { productId: string } }
 ) {
   try {
-    const user = await currentUser();
-    if (!user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { productId } = params;
+
+    if (!productId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Product ID is required" }), 
+        { status: 400 }
+      );
     }
 
-    const { productId } = await Promise.resolve(context.params);
-
-    const images = await db.productImage.findMany({
+    const product = await db.product.findUnique({
       where: {
-        productId,
-        product: {
-          userId: user.id
-        }
+        id: productId
       },
-      orderBy: {
-        order: 'asc'
+      select: {
+        images: true
       }
     });
 
-    return NextResponse.json(images);
+    if (!product) {
+      return new NextResponse(
+        JSON.stringify({ error: "Product not found" }), 
+        { status: 404 }
+      );
+    }
 
-  } catch (error: any) {
-    console.error("GET error:", error);
-    return NextResponse.json(
-      { 
+    return NextResponse.json(product);
+
+  } catch (error) {
+    console.error("[PRODUCT_IMAGES_GET]", error);
+    return new NextResponse(
+      JSON.stringify({
         error: "Failed to fetch images",
-        details: error.message
-      },
-      { status: 500 }
+        details: error instanceof Error ? error.message : "Unknown error"
+      }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
   }
 }
