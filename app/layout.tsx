@@ -6,7 +6,7 @@ import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/auth'
 import { Toaster } from "@/components/ui/sonner";
 import { ConfettiProvider } from '@/components/providers/confetti-provider';
-import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ThemeProvider } from '@/providers/theme-provider';
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import '@/app/styles/editor.css';
@@ -42,7 +42,7 @@ export default async function RootLayout({
     >
       <html lang="en" className="relative">
         <body className={clsx(dmSans.className, "antialiased bg-gray-800")}>
-          <ThemeProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark">
             <ConfettiProvider />
             <Toaster />
             <CartProvider>

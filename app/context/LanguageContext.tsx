@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Language = 'en' | 'bn';
 
@@ -129,13 +129,34 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>('bn');
+  const [mounted, setMounted] = useState(false);
+
+  // Only access localStorage on the client side
+  useEffect(() => {
+    setMounted(true);
+    const savedLanguage = localStorage.getItem('language') as Language;
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'bn')) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
+
+  const setLanguageWithStorage = (newLanguage: Language) => {
+    setLanguage(newLanguage);
+    if (mounted) {
+      localStorage.setItem('language', newLanguage);
+    }
+  };
 
   const t = (key: string): string => {
     return translations[language][key] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      setLanguage: setLanguageWithStorage, 
+      t 
+    }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -1,86 +1,118 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { db } from "@/lib/db"
-import { createStoreSchema } from "@/schemas/store"
+import { z } from "zod"
+import { storeSchema } from "@/lib/validations/store"
+
+// Mock data - in a real application, this would be a database
+const MOCK_STORES = [
+  {
+    id: "store-1",
+    name: "Tech Gadgets",
+    slug: "tech-gadgets",
+    description: "Latest tech gadgets and accessories",
+    imageUrl: "/images/stores/tech.jpg",
+    createdAt: new Date("2023-04-15"),
+    products: 24,
+    type: "retail",
+    businessType: "electronics",
+    status: "active",
+    visitors: 1250,
+    orders: 42,
+    revenue: 3840,
+    lastUpdated: new Date("2023-12-15"),
+    logo: "/assets/default-store-icon.svg"
+  },
+  {
+    id: "store-2",
+    name: "Fashion Boutique",
+    slug: "fashion-boutique",
+    description: "Modern fashion for everyone",
+    imageUrl: "/images/stores/fashion.jpg",
+    createdAt: new Date("2023-05-22"),
+    products: 36,
+    type: "retail",
+    businessType: "fashion",
+    status: "active",
+    visitors: 845,
+    orders: 31,
+    revenue: 2560,
+    lastUpdated: new Date("2023-12-18"),
+    logo: "/assets/default-store-icon.svg"
+  }
+];
+
+// We're using the imported storeSchema from lib/validations/store.ts
+// to ensure consistency between frontend and backend validation
+
+export async function GET() {
+  const session = await auth();
+  
+  // Check if user is authenticated
+  if (!session || !session.user) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+  
+  // In a real application, you would fetch from a database
+  // based on session.user.id
+  
+  return NextResponse.json(MOCK_STORES);
+}
 
 export async function POST(req: Request) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+    const session = await auth();
+    
+    // Check if user is authenticated
+    if (!session || !session.user) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
-
-    const body = await req.json()
     
-    // Validate store name only
-    const validatedData = createStoreSchema.parse(body)
-
-    const store = await db.store.create({
-      data: {
-        name: validatedData.name,
-        userId: session.user.id,
-        // Other fields will use their default values from the schema
-      }
-    })
-
-    return NextResponse.json(store)
+    const body = await req.json();
     
-  } catch (error: any) {
-    console.error("[STORES_POST]", error)
-    const errorMessage = error.message || "Something went wrong"
+    // Validate the request body
+    const validatedData = storeSchema.parse(body);
     
-    return new NextResponse(
-      JSON.stringify({ 
-        error: "Failed to create store",
-        details: errorMessage
-      }),
-      { 
+    // In a real application, you would save to a database
+    // associated with session.user.id
+    
+    // Generate slug from name
+    const slug = validatedData.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    
+    // Generate a new mock store with the validated data
+    const newStore = {
+      id: `store-${Date.now()}`,
+      name: validatedData.name,
+      slug,
+      description: validatedData.description,
+      type: validatedData.type,
+      businessType: validatedData.businessType,
+      imageUrl: validatedData.imageUrl || "/images/stores/default.jpg",
+      logo: validatedData.imageUrl || "/assets/default-store-icon.svg",
+      email: validatedData.email,
+      phone: validatedData.phone,
+      createdAt: new Date(),
+      lastUpdated: new Date(),
+      products: 0,
+      status: "active" as const,
+      visitors: 0,
+      orders: 0,
+      revenue: 0
+    };
+    
+    // Return the new store
+    return NextResponse.json(newStore, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return new NextResponse(JSON.stringify({ errors: error.errors }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
-      }
-    )
-  }
-}
-
-export async function GET(req: Request) {
-  try {
-    const session = await auth()
-    if (!session?.user) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+      });
     }
-
-    const store = await db.store.findFirst({
-      where: {
-        userId: session.user.id
-      }
-    })
-
-    return NextResponse.json(store)
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.log("[STORES_GET] Error:", errorMessage)
     
-    return new NextResponse(
-      JSON.stringify({ 
-        error: "Internal server error",
-        details: errorMessage
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    console.error("[STORE_POST]", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 } 

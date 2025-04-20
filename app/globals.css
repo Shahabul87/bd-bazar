@@ -574,3 +574,23 @@ body,
 .animate-float-slow {
   animation: float-slow 6s ease-in-out infinite;
 }
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-slower {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+.animate-spin-slower {
+  animation: spin-slower 5s linear infinite;
+}

@@ -29,23 +29,29 @@ export const HeroSection = () => {
   useEffect(() => {
     setIsVisible(true)
     
-    // Create particle effect
-    const particleContainer = document.getElementById('particle-container')
-    if (particleContainer) {
-      for (let i = 0; i < 40; i++) {
-        createParticle(particleContainer)
-      }
+    // Only run particle creation on client-side
+    if (typeof window === 'undefined') return;
+    
+    // Reference to the container
+    const container = document.getElementById('particle-container')
+    if (!container) return
+    
+    // Create particles
+    for (let i = 0; i < 30; i++) {
+      createParticle(container)
     }
     
     return () => {
-      const particleContainer = document.getElementById('particle-container')
-      if (particleContainer) {
-        particleContainer.innerHTML = ''
+      // Clean up particles when component unmounts
+      if (container) {
+        container.innerHTML = ''
       }
     }
   }, [])
   
   const createParticle = (container: HTMLElement) => {
+    if (typeof window === 'undefined') return; // Safety check
+    
     const particle = document.createElement('div')
     
     // Random size between 2 and 6px
