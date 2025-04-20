@@ -27,7 +27,7 @@ export default async function DashboardLayout({
         </div>
         
         {/* Dashboard Content with adjusted spacing to account for fixed header */}
-        <div className="flex-1 mt-5"> {/* Adjust this value based on ModernHeader + categories bar height */}
+        <div className="flex-1"> {/* Adjust this value based on ModernHeader + categories bar height */}
           {children}
         </div>
       </div>

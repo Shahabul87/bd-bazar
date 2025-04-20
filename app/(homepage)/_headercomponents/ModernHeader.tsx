@@ -5,6 +5,7 @@ import { useLanguage } from '@/app/context/LanguageContext';
 import { User as PrismaUser } from "@prisma/client";
 import { useCart } from '@/hooks/use-cart';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { usePathname } from 'next/navigation';
 
 // Import components
 import { BrandLogo } from './Logo/BrandLogo';
@@ -13,6 +14,9 @@ import { HeaderActions } from './Actions/HeaderActions';
 import { SearchBar } from './SearchBar/SearchBar';
 import { CategoriesBar } from './Navigation/CategoriesBar';
 import { MobileMenu } from './MobileMenu/MobileMenu';
+
+// Define routes where CategoriesBar should be shown
+const ROUTES_WITH_CATEGORIES = ['/', '/home'];
 
 interface ModernHeaderProps {
   user: PrismaUser | undefined;
@@ -25,6 +29,10 @@ export const ModernHeader = ({ user }: ModernHeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('location.all');
   const [selectedStore, setSelectedStore] = useState('store.all');
+  const pathname = usePathname();
+  
+  // Check if current route should show categories
+  const shouldShowCategories = ROUTES_WITH_CATEGORIES.includes(pathname);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -147,8 +155,10 @@ export const ModernHeader = ({ user }: ModernHeaderProps) => {
           onStoreSelect={handleStoreSelect}
         />
         
-        {/* Categories Bar */}
-        <CategoriesBar categories={categories} />
+        {/* Categories Bar - Only show on specific routes */}
+        {shouldShowCategories && (
+          <CategoriesBar categories={categories} />
+        )}
       </header>
 
       {/* Mobile Menu */}

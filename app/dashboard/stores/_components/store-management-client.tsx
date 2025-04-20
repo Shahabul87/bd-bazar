@@ -182,7 +182,7 @@ export function StoreManagementClient({ user, initialStores }: StoreManagementCl
   // Fetch stores on component mount
   useEffect(() => {
     const fetchStores = async () => {
-      setIsCreatingStore(true);
+      setIsLoading(true);
       try {
         const response = await axios.get("/api/stores");
         setStores(response.data);
@@ -190,7 +190,7 @@ export function StoreManagementClient({ user, initialStores }: StoreManagementCl
         console.error("Error fetching stores:", error);
         toast.error("Failed to load stores");
       } finally {
-        setIsCreatingStore(false);
+        setIsLoading(false);
       }
     };
 
