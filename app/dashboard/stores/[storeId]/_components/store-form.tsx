@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import axios from "axios";
-import { Loader2, Save, ArrowLeft, Sparkles, Building, Mail, MapPin, ChevronDown } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Sparkles, Building, Mail, MapPin, ChevronDown, Upload, X, Image } from "lucide-react";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -216,6 +216,8 @@ export function StoreForm({ storeId, preferredLanguage = 'en' }: StoreFormProps)
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Text content translations
   const translations = {
@@ -228,9 +230,14 @@ export function StoreForm({ storeId, preferredLanguage = 'en' }: StoreFormProps)
       storeType: "Store Type",
       businessCategory: "Business Category",
       storeDescription: "Store Description",
-      storeLogoUrl: "Store Logo URL",
+      storeLogoUrl: "Store Logo",
       logoPlaceholder: "Paste image URL (e.g., https://example.com/logo.png)",
-      logoHelper: "Enter a URL for your store logo. Leave blank to use the default logo.",
+      logoHelper: "Upload an image or enter a URL for your store logo.",
+      uploadLogo: "Upload Logo",
+      removeLogo: "Remove",
+      orDivider: "OR",
+      enterUrl: "Enter URL",
+      previewLogo: "Logo Preview",
       storeEmail: "Store Email",
       emailPlaceholder: "store@example.com",
       emailHelper: "The email where customers can contact you.",
@@ -265,9 +272,14 @@ export function StoreForm({ storeId, preferredLanguage = 'en' }: StoreFormProps)
       storeType: "স্টোরের ধরন",
       businessCategory: "ব্যবসার বিভাগ",
       storeDescription: "স্টোরের বিবরণ",
-      storeLogoUrl: "স্টোরের লোগো URL",
+      storeLogoUrl: "স্টোরের লোগো",
       logoPlaceholder: "ইমেজ URL পেস্ট করুন (উদাহরণ: https://example.com/logo.png)",
-      logoHelper: "আপনার স্টোরের লোগোর জন্য একটি URL দিন। ডিফল্ট লোগো ব্যবহার করতে খালি রাখুন।",
+      logoHelper: "লোগো আপলোড করুন বা আপনার স্টোরের লোগোর জন্য একটি URL দিন।",
+      uploadLogo: "লোগো আপলোড করুন",
+      removeLogo: "সরান",
+      orDivider: "অথবা",
+      enterUrl: "URL লিখুন",
+      previewLogo: "লোগো প্রিভিউ",
       storeEmail: "স্টোরের ইমেইল",
       emailPlaceholder: "store@example.com",
       emailHelper: "গ্রাহকরা যেখানে আপনার সাথে যোগাযোগ করতে পারবেন।",
@@ -318,6 +330,16 @@ export function StoreForm({ storeId, preferredLanguage = 'en' }: StoreFormProps)
 
   const { register, handleSubmit, formState: { errors, isDirty }, setValue, watch, reset } = form;
   
+  // Watch the imageUrl field to update the logo preview
+  const imageUrl = watch("imageUrl");
+  
+  // Update logo preview when imageUrl changes
+  useEffect(() => {
+    if (imageUrl) {
+      setLogoPreview(imageUrl);
+    }
+  }, [imageUrl]);
+  
   // Fetch store data using custom hook
   const { isFetching, storeData } = useStoreData(storeId, t.loadingError);
   
@@ -328,8 +350,58 @@ export function StoreForm({ storeId, preferredLanguage = 'en' }: StoreFormProps)
         // @ts-ignore - dynamically setting form values
         setValue(key as any, value as any);
       });
+      
+      // Set logo preview if imageUrl exists
+      if (storeData.imageUrl) {
+        setLogoPreview(storeData.imageUrl);
+      }
     }
   }, [storeData, isFetching, setValue]);
+
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.type.includes('image/')) {
+      toast.error("Please upload an image file.");
+      return;
+    }
+    
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size should be less than 2MB.");
+      return;
+    }
+    
+    // Create a URL for the file and update the preview
+    const fileUrl = URL.createObjectURL(file);
+    setLogoPreview(fileUrl);
+    
+    // Convert to base64 for storage
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setValue("imageUrl", reader.result as string, { shouldDirty: true });
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  // Trigger file input click
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  // Remove logo
+  const removeLogo = () => {
+    setLogoPreview(null);
+    setValue("imageUrl", "", { shouldDirty: true });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const onSubmit = async (data: StoreFormValues) => {
     try {
@@ -451,15 +523,82 @@ export function StoreForm({ storeId, preferredLanguage = 'en' }: StoreFormProps)
                 )}
               </div>
               
-              <div className="space-y-2">
+              {/* New Image Upload Component */}
+              <div className="space-y-3">
                 <Label htmlFor="imageUrl" className="text-white/90">{t.storeLogoUrl}</Label>
-                <Input
-                  id="imageUrl"
-                  placeholder={t.logoPlaceholder}
-                  {...register("imageUrl")}
-                  className="bg-white/5 border-white/10 text-white focus:border-purple-500 focus:ring-purple-500"
-                />
-                <p className="text-xs text-white/60">{t.logoHelper}</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Left: Upload Button and URL Input */}
+                  <div className="md:col-span-2 space-y-3">
+                    {/* File Upload Button */}
+                    <div>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileUpload}
+                        accept="image/*" 
+                        className="hidden" 
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={triggerFileInput}
+                        className="w-full bg-white/5 border-white/10 hover:bg-white/10 text-white flex items-center justify-center gap-2"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {t.uploadLogo}
+                      </Button>
+                    </div>
+                    
+                    {/* Divider */}
+                    <div className="flex items-center gap-4">
+                      <div className="h-px bg-white/10 flex-1"></div>
+                      <span className="text-white/40 text-xs font-medium">{t.orDivider}</span>
+                      <div className="h-px bg-white/10 flex-1"></div>
+                    </div>
+                    
+                    {/* URL Input */}
+                    <div>
+                      <Label htmlFor="imageUrl" className="text-white/90 text-sm mb-1 block">{t.enterUrl}</Label>
+                      <Input
+                        id="imageUrl"
+                        placeholder={t.logoPlaceholder}
+                        {...register("imageUrl")}
+                        className="bg-white/5 border-white/10 text-white focus:border-purple-500 focus:ring-purple-500"
+                      />
+                    </div>
+                    
+                    <p className="text-xs text-white/60">{t.logoHelper}</p>
+                  </div>
+                  
+                  {/* Right: Logo Preview */}
+                  <div className="relative">
+                    <div className="rounded-md border border-white/10 bg-white/5 aspect-square flex items-center justify-center overflow-hidden">
+                      {logoPreview ? (
+                        <>
+                          <img 
+                            src={logoPreview} 
+                            alt="Store logo preview" 
+                            className="max-w-full max-h-full object-contain"
+                          />
+                          <button 
+                            type="button"
+                            onClick={removeLogo}
+                            className="absolute top-2 right-2 bg-black/40 text-white rounded-full p-1 hover:bg-black/60 transition-colors"
+                            title={t.removeLogo}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-white/40">
+                          <Image className="h-8 w-8 mb-2 opacity-50" />
+                          <span className="text-xs">{t.previewLogo}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

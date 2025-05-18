@@ -1,7 +1,6 @@
 import { db } from "@/lib/db"
 import { currentUser } from "@/lib/auth"
-import { Header } from "@/app/(homepage)/header"
-import { HeaderAfterLogin } from "@/app/(homepage)/header-after-login"
+import { MainHeader } from "@/app/(homepage)/main-header"
 import { Store, MapPin, Phone, Mail, Globe, Clock, Package } from "lucide-react"
 import Link from "next/link"
 import { ProductCard } from "@/components/product-card"
@@ -63,7 +62,7 @@ export default async function StorePage({
 
     return (
       <div className="min-h-screen bg-gray-950">
-        {user ? <HeaderAfterLogin /> : <Header />}
+        <MainHeader />
 
         {/* Store Header */}
         <div className="relative">

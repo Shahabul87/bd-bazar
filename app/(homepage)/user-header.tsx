@@ -1,6 +1,5 @@
 import React from 'react'
-import { Header } from './header';
-import { HeaderAfterLogin } from './header-after-login';
+import { MainHeader } from './main-header';
 import { User } from '@prisma/client';
 
 interface ConditionalHeaderProps {
@@ -12,11 +11,11 @@ const ConditionalHeader: React.FC<ConditionalHeaderProps> = ({ user }) => {
     <>
       {!user ? (
         <div>
-          <Header />
+          <MainHeader />
         </div>
       ) : (
         <div>
-          <HeaderAfterLogin />
+          <MainHeader />
         </div>
       )}
     </>

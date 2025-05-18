@@ -1,36 +1,30 @@
-import { currentUser } from '@/lib/auth';
-import { User } from "@prisma/client";
-import { redirect } from 'next/navigation';
-import { LanguageProvider } from '@/app/context/LanguageContext';
-import { HeaderAfterLogin } from '@/app/(homepage)/header-after-login';
+import { redirect } from "next/navigation"
+import { currentUser } from '@/lib/auth'
+import { AdminDashboardClient } from "./_components/admin-dashboard-client"
+import { LanguageProvider } from "@/app/context/LanguageContext"
+import { ThemeProvider } from "@/contexts/ThemeContext"
+import { Toaster } from "@/components/ui/sonner"
 
-export default async function DashboardLayout({
-  children,
+export default async function AdminLayout({
+  children
 }: {
   children: React.ReactNode
 }) {
-  // Get the current user
-  const user = await currentUser() as User | undefined;
+  const user = await currentUser()
   
-  // Redirect to login if not authenticated
+
   if (!user) {
-    redirect('/login');
+    redirect("/")
   }
 
   return (
-    <LanguageProvider>
-      {/* The ModernHeader component has a height of 64px (h-16) plus categories bar */}
-      <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-        {/* ModernHeader from HeaderAfterLogin */}
-        <div className="sticky top-0 z-50">
-          <HeaderAfterLogin />
-        </div>
-        
-        {/* Dashboard Content with adjusted spacing to account for fixed header */}
-        <div className="flex-1"> {/* Adjust this value based on ModernHeader + categories bar height */}
+    <ThemeProvider>
+      <LanguageProvider>
+        <AdminDashboardClient user={user}>
           {children}
-        </div>
-      </div>
-    </LanguageProvider>
-  );
+        </AdminDashboardClient>
+        <Toaster />
+      </LanguageProvider>
+    </ThemeProvider>
+  )
 } 

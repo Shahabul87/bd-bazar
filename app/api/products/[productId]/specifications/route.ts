@@ -7,19 +7,23 @@ export async function PATCH(
   { params }: { params: { productId: string } }
 ) {
   try {
-    const [user, values, { productId }] = await Promise.all([
+    const [user, values, paramsObj] = await Promise.all([
       currentUser(),
       req.json(),
-      Promise.resolve(params)
+      params
     ])
 
     if (!user?.id) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    if (!Array.isArray(values.specifications)) {
-      return new NextResponse("Invalid specifications format", { status: 400 })
-    }
+    const { productId } = paramsObj
+    const { specifications } = values
+    
+    // Convert specifications to appropriate format if needed
+    const formattedSpecifications = Array.isArray(specifications) 
+      ? specifications 
+      : []
 
     const product = await db.product.update({
       where: {
@@ -27,11 +31,17 @@ export async function PATCH(
         userId: user.id
       },
       data: {
-        specifications: values.specifications
+        specifications: formattedSpecifications
       }
     })
 
-    return NextResponse.json(product)
+    // Convert price to number before returning
+    const formattedProduct = {
+      ...product,
+      price: Number(product.price),
+    };
+
+    return NextResponse.json(formattedProduct)
   } catch (error) {
     const errorMessage = error instanceof Error 
       ? error.message 

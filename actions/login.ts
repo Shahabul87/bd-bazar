@@ -107,7 +107,9 @@ export const login = async (
       email,
       password,
       redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
-    })
+    });
+    // For server-side rendering or when Next.js doesn't automatically redirect
+    return { success: "Logged in!" };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

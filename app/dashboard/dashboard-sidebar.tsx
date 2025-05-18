@@ -43,7 +43,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
   return (
     <div 
       className={cn(
-        "shrink-0 bg-slate-800 border-r border-slate-700/50 h-full overflow-y-auto flex flex-col transition-all duration-300",
+        "shrink-0 bg-slate-800 border-r border-t border-white/10 h-full overflow-y-auto flex flex-col transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -81,7 +81,10 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       <nav className="flex-1 py-6">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            // Safely check if current path is the item's path or a nested path under it
+            const isActive = pathname === item.href || 
+                            (pathname && item.href && item.href !== '/dashboard' && 
+                             pathname.startsWith(`${item.href}/`));
             const Icon = item.icon;
             
             return (

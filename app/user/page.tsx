@@ -1,6 +1,6 @@
 import { currentUser } from '@/lib/auth';
 import { User, UserRole } from "@prisma/client";
-import { HeaderAfterLogin } from '@/app/(homepage)/header-after-login';
+import { MainHeader } from '@/app/(homepage)/main-header';
 import { Building2, ShoppingBag, Store, Wallet, Heart, Settings, BrainCircuit, LineChart, BarChart3, Package, Clock, UserPlus, Users } from "lucide-react";
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -23,7 +23,7 @@ export default async function UserProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Header */}
-      <HeaderAfterLogin />
+      <MainHeader />
       
       {/* Main Content */}
       <main className="container mx-auto py-8 px-4 md:px-6">

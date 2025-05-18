@@ -17,6 +17,9 @@ import { useLanguage } from "@/app/context/LanguageContext";
 // Simple schema for initial store creation
 const createStoreSchema = z.object({
   name: z.string().min(3, "Store name must be at least 3 characters").max(50, "Store name can't exceed 50 characters"),
+  type: z.string().default("retail"),
+  businessType: z.string().default("general"),
+  description: z.string().optional(),
 });
 
 type CreateStoreFormValues = z.infer<typeof createStoreSchema>;
@@ -38,16 +41,12 @@ interface CreateStoreModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: (store: any) => void;
-  templates?: StoreTemplate[];
-  themes?: StoreTheme[];
 }
 
 export function CreateStoreModal({
   isOpen,
   onClose,
-  onSuccess,
-  templates = [],
-  themes = []
+  onSuccess
 }: CreateStoreModalProps) {
   const router = useRouter();
   const { language } = useLanguage();
@@ -57,6 +56,9 @@ export function CreateStoreModal({
     resolver: zodResolver(createStoreSchema),
     defaultValues: {
       name: "",
+      type: "retail",
+      businessType: "general",
+      description: "",
     }
   });
 
@@ -94,50 +96,32 @@ export function CreateStoreModal({
     try {
       setIsLoading(true);
       
-      // Create store with just the name
-      const response = await axios.post("/api/stores", {
-        name: data.name,
-        // Add minimum required fields with placeholders
-        type: "retail", // Default type
-        businessType: "general", // Default business type
-        description: `${data.name} - Store details to be updated.`, // Placeholder description
-      });
+      // Prepare store data with proper description if not provided
+      const storeData = {
+        ...data,
+        description: data.description || `${data.name} - Store details coming soon.`
+      };
       
-      const storeId = response.data.id;
+      // Send API request to create the store
+      const response = await axios.post("/api/stores", storeData);
       
-      // Store the newly created store data in localStorage
-      // This is a simplification - in a real app you'd use a database
-      try {
-        // We'll create a stores object to hold all created stores
-        const existingStores = localStorage.getItem('createdStores') 
-          ? JSON.parse(localStorage.getItem('createdStores') || '{}') 
-          : {};
-        
-        // Add this store
-        existingStores[storeId] = {
-          ...response.data,
-          name: data.name // Ensure the name is set correctly
-        };
-        
-        localStorage.setItem('createdStores', JSON.stringify(existingStores));
-      } catch (storageError) {
-        console.error("Error saving to localStorage:", storageError);
-        // Continue even if storage fails
-      }
+      // Get the created store from the response
+      const newStore = response.data;
       
-      toast.success("Store created! Complete your store details now.");
+      toast.success("Store created successfully!");
       
-      // Handle success callback if provided
+      // Call the onSuccess callback if provided
       if (onSuccess) {
-        onSuccess(response.data);
+        onSuccess(newStore);
       }
       
       // Reset form and close modal
       reset();
       onClose();
       
-      // Redirect to the store dashboard page to complete setup
-      router.push(`/dashboard/stores/${storeId}`);
+      // Redirect to the new store's dashboard
+      router.push(`/dashboard/stores/${newStore.id}`);
+      router.refresh();
     } catch (error: any) {
       console.error("Error creating store:", error);
       
@@ -151,6 +135,13 @@ export function CreateStoreModal({
             message: Array.isArray(value) ? value[0] : value 
           });
         });
+      } else if (error.response?.status === 401) {
+        toast.error("Unauthorized. Please sign in again.");
+        setTimeout(() => {
+          router.push("/auth/login");
+        }, 2000);
+      } else if (error.response?.status === 409) {
+        toast.error("A store with this name already exists.");
       } else {
         // Generic error
         toast.error(error.response?.data?.error || "Failed to create store. Please try again.");

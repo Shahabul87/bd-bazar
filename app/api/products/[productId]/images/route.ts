@@ -1,28 +1,43 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 
 export async function PATCH(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { productId: string } }
 ) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const { productId } = await params;
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthenticated" },
+        { status: 401 }
+      );
     }
 
-    const { productId } = params;
-    
     if (!productId) {
-      return new NextResponse("Product ID is required", { status: 400 });
+      return NextResponse.json(
+        { error: "Product ID is required" },
+        { status: 400 }
+      );
     }
 
-    const body = await req.json();
+    const contentType = request.headers.get("content-type") || "";
     
-    if (!body || !body.images) {
-      return new NextResponse(
-        JSON.stringify({ error: "Images are required" }), 
+    if (!contentType.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Request must be JSON" },
+        { status: 400 }
+      );
+    }
+    
+    const body = await request.json();
+    
+    if (!body.images || !Array.isArray(body.images)) {
+      return NextResponse.json(
+        { error: "Images are required" },
         { status: 400 }
       );
     }
@@ -34,85 +49,78 @@ export async function PATCH(
     });
 
     if (!existingProduct) {
-      return new NextResponse(
-        JSON.stringify({ error: "Product not found" }), 
+      return NextResponse.json(
+        { error: "Product not found" },
         { status: 404 }
       );
     }
 
     const updatedProduct = await db.product.update({
       where: {
-        id: productId
+        id: productId,
       },
       data: {
-        images: body.images
-      }
+        images: {
+          deleteMany: {},
+          createMany: {
+            data: body.images.map((image: { url: string; publicId: string }) => ({
+              url: image.url,
+              publicId: image.publicId,
+            })),
+          },
+        },
+      },
+      include: {
+        images: true,
+      },
     });
 
-    return NextResponse.json(updatedProduct);
-
+    return NextResponse.json(updatedProduct.images);
   } catch (error) {
-    console.error("[PRODUCT_IMAGES_PATCH]", error);
-    return new NextResponse(
-      JSON.stringify({
-        error: "Failed to update product images",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }),
-      { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+    console.error("PATCH_PRODUCT_IMAGES", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
   }
 }
 
 export async function GET(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { productId: string } }
 ) {
   try {
-    const { productId } = params;
+    const { productId } = await params;
 
     if (!productId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Product ID is required" }), 
+      return NextResponse.json(
+        { error: "Product ID is required" },
         { status: 400 }
       );
     }
 
     const product = await db.product.findUnique({
       where: {
-        id: productId
+        id: productId,
       },
-      select: {
-        images: true
-      }
+      include: {
+        images: true,
+      },
     });
 
     if (!product) {
-      return new NextResponse(
-        JSON.stringify({ error: "Product not found" }), 
+      return NextResponse.json(
+        { error: "Product not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(product);
-
+    return NextResponse.json(product.images);
   } catch (error) {
-    console.error("[PRODUCT_IMAGES_GET]", error);
-    return new NextResponse(
-      JSON.stringify({
-        error: "Failed to fetch images",
-        details: error instanceof Error ? error.message : "Unknown error"
-      }),
-      { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+    console.error("GET_PRODUCT_IMAGES", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
   }
 }

@@ -1,4 +1,4 @@
-import { HeaderAfterLogin } from "@/app/(homepage)/header-after-login"
+import { MainHeader } from "@/app/(homepage)/main-header"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 
@@ -15,7 +15,7 @@ export default async function ShopLayout({
 
   return (
     <div>
-      <HeaderAfterLogin />
+      <MainHeader />
       <main>
         {children}
       </main>

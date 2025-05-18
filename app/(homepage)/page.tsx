@@ -3,8 +3,7 @@ import { HeroSection } from "./_components/hero-section"
 import { StatsSection } from "./_components/stats-section"
 import { LatestProducts } from "./_components/latest-products"
 import { TrendingProducts } from "./_components/trending-products"
-import { HeaderAfterLogin } from "./header-after-login"
-import { MainFooter } from "./main-footer"
+
 import { LanguageProvider } from '@/app/context/LanguageContext'
 
 export default async function HomePage() {
@@ -19,7 +18,7 @@ export default async function HomePage() {
   return (
     <LanguageProvider>
       <div className="flex flex-col min-h-screen bg-gray-950">
-        <HeaderAfterLogin />
+  
         <HeroSection />
         <StatsSection 
           totalProducts={totalProducts}

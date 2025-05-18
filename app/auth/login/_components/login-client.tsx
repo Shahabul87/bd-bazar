@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { AppHeader } from "@/app/_components/AppHeader";
+
 
 export const LoginPageClient = () => {
   const { language, setLanguage } = useLanguage();
@@ -44,7 +44,6 @@ export const LoginPageClient = () => {
 
   return (
     <>
-      {isAuthenticated && <AppHeader />}
       <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] w-full bg-gradient-to-b from-slate-800 to-gray-900">
         {/* Language switcher - visible on mobile only */}
         <div className="lg:hidden flex justify-end p-4">

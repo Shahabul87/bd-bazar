@@ -59,6 +59,7 @@ const translations = {
     'store.verified': 'Verified Seller',
     'store.premium': 'Premium Store',
     // Dropdown menu translations
+    'dropdown.dashboard': 'Dashboard',
     'dropdown.profile': 'Profile',
     'dropdown.orders': 'My Orders',
     'dropdown.wishlist': 'Wishlist',
@@ -115,6 +116,7 @@ const translations = {
     'store.verified': 'যাচাইকৃত বিক্রেতা',
     'store.premium': 'প্রিমিয়াম স্টোর',
     // Dropdown menu translations
+    'dropdown.dashboard': 'ড্যাশবোর্ড',
     'dropdown.profile': 'প্রোফাইল',
     'dropdown.orders': 'আমার অর্ডার',
     'dropdown.wishlist': 'ইচ্ছাতালিকা',

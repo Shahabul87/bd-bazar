@@ -3,7 +3,7 @@
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { useState, useTransition, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { Mail, Phone, Lock, ArrowRight, Globe } from "lucide-react";
@@ -24,8 +24,10 @@ import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { login } from "@/actions/login";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
 export const LoginForm = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const urlError = searchParams.get("error") === "OAuthAccountNotLinked"
@@ -37,6 +39,7 @@ export const LoginForm = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   const { language, setLanguage, t } = useLanguage();
 
   const form = useForm<z.infer<typeof LoginSchema>>({
@@ -46,6 +49,13 @@ export const LoginForm = () => {
       password: "",
     },
   });
+
+  // Handle redirect after successful login
+  useEffect(() => {
+    if (shouldRedirect) {
+      router.push(callbackUrl || DEFAULT_LOGIN_REDIRECT);
+    }
+  }, [shouldRedirect, router, callbackUrl]);
 
   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
     setError("");
@@ -61,6 +71,7 @@ export const LoginForm = () => {
           if (data?.success) {
             form.reset();
             setSuccess(data.success);
+            setShouldRedirect(true);
           }
           if (data?.twoFactor) {
             setShowTwoFactor(true);

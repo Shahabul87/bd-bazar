@@ -2,8 +2,7 @@ import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/auth'
 import { Toaster } from "@/components/ui/sonner";
 import { ConfettiProvider } from '@/components/providers/confetti-provider';
-import { Header } from "@/app/(homepage)/header";
-import { HeaderAfterLogin } from "@/app/(homepage)/header-after-login";
+import { MainHeader } from "@/app/(homepage)/main-header";
 import { currentUser } from '@/lib/auth';
 
 
@@ -25,7 +24,7 @@ export default async function BlogLayout({
      refetchInterval={0} 
      refetchOnWindowFocus={false}
    >
-    {!user ? <Header /> : <HeaderAfterLogin />}
+    {!user ? <MainHeader /> : <MainHeader />}
       <div className="relative min-h-screen w-screen">
         <div className="antialiased bg-gray-800 text-zinc-300 font-body min-h-screen">
           <ConfettiProvider />

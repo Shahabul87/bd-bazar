@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { LogIn, UserPlus, User, Settings, ShoppingBag, Heart, LogOut } from 'lucide-react';
+import { LogIn, UserPlus, User, Settings, ShoppingBag, Heart, LogOut, LayoutDashboard } from 'lucide-react';
 import { useLanguage } from '@/app/context/LanguageContext';
 import { User as PrismaUser } from "@prisma/client";
 import { LogoutButton } from '@/components/auth/logout-button';
@@ -54,6 +54,14 @@ export const UserDropdown = ({ user }: UserDropdownProps) => {
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
               </div>
               <div className="py-1">
+                <Link
+                  href="/dashboard"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  {t('dropdown.dashboard')}
+                </Link>
                 <Link
                   href="/account"
                   className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"

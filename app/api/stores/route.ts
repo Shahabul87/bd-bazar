@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
+import { currentUser } from "@/lib/auth"
+import { db } from "@/lib/db"
 import { z } from "zod"
 import { storeSchema } from "@/lib/validations/store"
 
@@ -44,75 +45,137 @@ const MOCK_STORES = [
 // We're using the imported storeSchema from lib/validations/store.ts
 // to ensure consistency between frontend and backend validation
 
-export async function GET() {
-  const session = await auth();
-  
-  // Check if user is authenticated
-  if (!session || !session.user) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-  
-  // In a real application, you would fetch from a database
-  // based on session.user.id
-  
-  return NextResponse.json(MOCK_STORES);
+// Define the Store interface
+interface Store {
+  id: string;
+  name: string;
+  type: string;
+  businessType: string;
+  description: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  imageUrl?: string;
+  email?: string;
+  phone?: string;
 }
 
+// Define a schema for store creation with just the required fields
+const createStoreSchema = storeSchema.pick({
+  name: true,
+  type: true,
+  businessType: true,
+  description: true,
+});
+
+// POST /api/stores - Create a new store
 export async function POST(req: Request) {
   try {
-    const session = await auth();
+    // 1. Check if user is authenticated
+    const user = await currentUser();
     
-    // Check if user is authenticated
-    if (!session || !session.user) {
+    if (!user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    console.log("Creating store with user:", JSON.stringify(user, null, 2));
     
-    const body = await req.json();
-    
-    // Validate the request body
-    const validatedData = storeSchema.parse(body);
-    
-    // In a real application, you would save to a database
-    // associated with session.user.id
-    
-    // Generate slug from name
-    const slug = validatedData.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-    
-    // Generate a new mock store with the validated data
-    const newStore = {
-      id: `store-${Date.now()}`,
-      name: validatedData.name,
-      slug,
-      description: validatedData.description,
-      type: validatedData.type,
-      businessType: validatedData.businessType,
-      imageUrl: validatedData.imageUrl || "/images/stores/default.jpg",
-      logo: validatedData.imageUrl || "/assets/default-store-icon.svg",
-      email: validatedData.email,
-      phone: validatedData.phone,
-      createdAt: new Date(),
-      lastUpdated: new Date(),
-      products: 0,
-      status: "active" as const,
-      visitors: 0,
-      orders: 0,
-      revenue: 0
-    };
-    
-    // Return the new store
-    return NextResponse.json(newStore, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify({ errors: error.errors }), { 
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (!user.id) {
+      return new NextResponse("User ID not found", { status: 400 });
     }
+
+    // 2. Parse and validate request body
+    const body = await req.json();
+    const validationResult = createStoreSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { 
+          error: "Invalid store data", 
+          errors: validationResult.error.flatten().fieldErrors 
+        }, 
+        { status: 400 }
+      );
+    }
+
+    const { name, type, businessType, description } = validationResult.data;
+
+    // Check if the user exists in the database first
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!dbUser) {
+      console.error("User not found in database:", user.id);
+      return new NextResponse("User not found in database", { status: 404 });
+    }
+
+    // 3. Create the store in database using Prisma with the validated user ID
+    const store = await db.store.create({
+      data: {
+        name,
+        type,
+        businessType,
+        description,
+        userId: dbUser.id
+      }
+    });
+
+    // 4. Return the created store
+    return NextResponse.json(store, { status: 201 });
+  } catch (error) {
+    console.error("[STORES_POST]", error instanceof Error ? error.message : "Unknown error");
+    if (error instanceof Error) {
+      console.error("[STORES_POST] Full error:", error);
+    }
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+// GET /api/stores - Get all stores for the current user
+export async function GET(req: Request) {
+  try {
+    // 1. Check if user is authenticated
+    const user = await currentUser();
     
-    console.error("[STORE_POST]", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (!user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // 2. Fetch all stores for this user using Prisma
+    const dbStores = await db.store.findMany({
+      where: {
+        userId: user.id
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    // 3. Format the stores to ensure all fields needed by UI are present
+    const formattedStores = dbStores.map(store => {
+      // Generate a slug if one doesn't exist
+      const slug = store.name.toLowerCase().replace(/\s+/g, "-");
+      
+      return {
+        ...store,
+        slug: slug,
+        status: 'active', // Default status
+        theme: 'default', // Default theme
+        visitors: 0,
+        orders: 0,
+        revenue: 0,
+        products: 0,
+        // Convert Decimal to number for serialization
+        totalRevenue: store.totalRevenue ? parseFloat(store.totalRevenue.toString()) : 0,
+        lastUpdated: store.updatedAt.toISOString(),
+      };
+    });
+
+    // 4. Return the formatted stores
+    return NextResponse.json(formattedStores);
+  } catch (error) {
+    console.error("[STORES_GET]", error instanceof Error ? error.message : "Unknown error");
+    return new NextResponse("Internal Error", { status: 500 });
   }
 } 

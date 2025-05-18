@@ -7,19 +7,18 @@ export async function PATCH(
   { params }: { params: { productId: string } }
 ) {
   try {
-    const [user, values, { productId }] = await Promise.all([
+    const [user, values, paramsObj] = await Promise.all([
       currentUser(),
       req.json(),
-      Promise.resolve(params)
+      params
     ])
 
     if (!user?.id) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    if (!Array.isArray(values.colors)) {
-      return new NextResponse("Invalid colors format", { status: 400 })
-    }
+    const { productId } = paramsObj
+    const { colors } = values
 
     const product = await db.product.update({
       where: {
@@ -27,11 +26,17 @@ export async function PATCH(
         userId: user.id
       },
       data: {
-        colors: values.colors
+        colors
       }
     })
 
-    return NextResponse.json(product)
+    // Convert price to number before returning
+    const formattedProduct = {
+      ...product,
+      price: Number(product.price),
+    }
+
+    return NextResponse.json(formattedProduct)
   } catch (error) {
     const errorMessage = error instanceof Error 
       ? error.message 

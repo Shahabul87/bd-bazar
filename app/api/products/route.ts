@@ -29,7 +29,13 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json(product);
+    // Convert price to number before returning
+    const formattedProduct = {
+      ...product,
+      price: Number(product.price),
+    };
+
+    return NextResponse.json(formattedProduct);
   } catch (error) {
     console.error("[PRODUCTS_ERROR]", error instanceof Error ? error.message : "Unknown error");
     return new NextResponse("Internal Error", { status: 500 });

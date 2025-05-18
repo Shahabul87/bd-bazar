@@ -108,7 +108,11 @@ export const getProducts = async ({
       take: limit
     });
 
-    return products;
+    // Map products to ensure Decimal is converted to number
+    return products.map(product => ({
+      ...product,
+      price: Number(product.price),
+    }));
   } catch (error) {
     console.error("[GET_PRODUCTS]", error instanceof Error ? error.message : 'An unknown error occurred');
     return [];
@@ -150,10 +154,14 @@ export const getTrendingProducts = async (limit = 4) => {
       }
     });
 
-    // Sort by order count
+    // Sort by order count and convert Decimal to number
     return products
       .sort((a, b) => (b._count?.orderItems || 0) - (a._count?.orderItems || 0))
-      .slice(0, limit);
+      .slice(0, limit)
+      .map(product => ({
+        ...product,
+        price: Number(product.price),
+      }));
 
   } catch (error) {
     if (error instanceof Error) {
@@ -168,7 +176,7 @@ export const getTrendingProducts = async (limit = 4) => {
 // Helper function to get latest products
 export const getLatestProducts = async (limit = 8) => {
   try {
-    return await db.product.findMany({
+    const products = await db.product.findMany({
       where: {
         active: true
       },
@@ -195,6 +203,12 @@ export const getLatestProducts = async (limit = 8) => {
       },
       take: limit
     });
+
+    // Convert Decimal to number
+    return products.map(product => ({
+      ...product,
+      price: Number(product.price),
+    }));
   } catch (error) {
     console.error("[GET_LATEST_PRODUCTS]", error);
     return [];

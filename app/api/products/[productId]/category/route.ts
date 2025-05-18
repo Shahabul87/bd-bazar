@@ -67,7 +67,13 @@ export async function PATCH(
 
     console.log("Updated product:", product) // Debug log
 
-    return NextResponse.json(product)
+    // Convert price to number before returning
+    const formattedProduct = {
+      ...product,
+      price: Number(product.price),
+    }
+
+    return NextResponse.json(formattedProduct)
   } catch (error) {
     console.log("Error details:", {
       message: error instanceof Error ? error.message : "Unknown error",

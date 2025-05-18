@@ -1,5 +1,4 @@
-import { Header } from "@/app/(homepage)/header"
-import { HeaderAfterLogin } from "@/app/(homepage)/header-after-login"
+import { MainHeader } from "@/app/(homepage)/main-header"
 
 interface ProductLayoutProps {
   user: any;
@@ -9,7 +8,7 @@ interface ProductLayoutProps {
 export const ProductLayout = ({ user, children }: ProductLayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-950">
-      {user ? <HeaderAfterLogin /> : <Header />}
+      <MainHeader />
       <main className="w-full pt-10">
         <div className="px-4 sm:px-6 lg:px-8 max-w-[2000px] mx-auto">
           {children}

@@ -24,7 +24,13 @@ export async function GET(
       }
     })
 
-    return NextResponse.json(product)
+    // Convert Decimal to number before returning
+    const formattedProduct = product ? {
+      ...product,
+      price: Number(product.price),
+    } : null;
+
+    return NextResponse.json(formattedProduct)
   } catch (error) {
     console.log("[PRODUCT_GET]", error)
     return new NextResponse("Internal error", { status: 500 })
@@ -36,35 +42,75 @@ export async function PATCH(
   context: { params: { storeId: string, productId: string } }
 ) {
   try {
-    const session = await auth()
-    const { storeId, productId } = await context.params
+    const { userId } = auth()
     const body = await req.json()
+    
+    const { storeId, productId } = await context.params
 
-    if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 })
-    }
-
-    const store = await db.store.findUnique({
+    const store = await db.store.findFirst({
       where: {
         id: storeId,
-        userId: session.user.id
+        userId
       }
     })
 
     if (!store) {
-      return new NextResponse("Store not found", { status: 404 })
+      return new NextResponse("Unauthorized", { status: 403 })
     }
 
+    // Special handling for imagesData field
+    const { imagesData, ...productData } = body;
+    
+    // Update the product
     const product = await db.product.update({
       where: {
         id: productId
       },
-      data: {
-        ...body
-      }
+      data: productData
     })
 
-    return NextResponse.json(product)
+    // If imagesData is provided, create ProductImage records
+    if (imagesData && Array.isArray(imagesData) && imagesData.length > 0) {
+      const createdImages = [];
+      
+      for (const image of imagesData) {
+        if (image.url && image.publicId) {
+          const savedImage = await db.productImage.create({
+            data: {
+              productId,
+              url: image.url,
+              publicId: image.publicId,
+              alt: image.alt || null,
+              order: image.order || 0
+            }
+          });
+          
+          createdImages.push(savedImage);
+        }
+      }
+      
+      // Return the updated product with the newly created images
+      const updatedProduct = await db.product.findUnique({
+        where: { id: productId },
+        include: { images: true }
+      });
+      
+      // Convert price to number before returning
+      const formattedProduct = {
+        ...updatedProduct,
+        price: Number(updatedProduct.price),
+      };
+      
+      return NextResponse.json(formattedProduct);
+    }
+
+    // Convert price to number before returning
+    const formattedProduct = {
+      ...product,
+      price: Number(product.price),
+    };
+
+    return NextResponse.json(formattedProduct)
   } catch (error) {
     console.log("[PRODUCT_PATCH]", error)
     return new NextResponse("Internal error", { status: 500 })
@@ -76,22 +122,18 @@ export async function DELETE(
   context: { params: { storeId: string, productId: string } }
 ) {
   try {
-    const session = await auth()
+    const { userId } = auth()
     const { storeId, productId } = await context.params
 
-    if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 })
-    }
-
-    const store = await db.store.findUnique({
+    const store = await db.store.findFirst({
       where: {
         id: storeId,
-        userId: session.user.id
+        userId
       }
     })
 
     if (!store) {
-      return new NextResponse("Store not found", { status: 404 })
+      return new NextResponse("Unauthorized", { status: 403 })
     }
 
     const product = await db.product.delete({
@@ -100,7 +142,13 @@ export async function DELETE(
       }
     })
 
-    return NextResponse.json(product)
+    // Convert price to number before returning
+    const formattedProduct = {
+      ...product,
+      price: Number(product.price),
+    };
+
+    return NextResponse.json(formattedProduct)
   } catch (error) {
     console.log("[PRODUCT_DELETE]", error)
     return new NextResponse("Internal error", { status: 500 })
